@@ -1,153 +1,157 @@
-struct ConsistencyTest{E<:CalibrationErrorEstimator,V} <: CalibrationTest
+struct ConsistencyTest{E<:CalibrationErrorEstimator,P,T,V} <: HypothesisTests.HypothesisTest
     """Calibration estimator."""
     estimator::E
+    """Predictions."""
+    predictions::P
+    """Targets."""
+    targets::T
     """Calibration estimate."""
     estimate::V
-    """Bootstrap samples using consistency resampling."""
-    straps::Vector{V}
 end
 
-function ConsistencyTest(estimator::CalibrationErrorEstimator,
-                         data::Tuple{<:AbstractMatrix{<:Real},<:AbstractVector{<:Integer}};
-                         nruns::Int = 1_000,
-                         rng::AbstractRNG = Random.GLOBAL_RNG)
-    # check if the number of predictions and labels is equal
-    predictions, labels = CalibrationErrors.get_predictions_labels(data)
+function ConsistencyTest(estimator::CalibrationErrorEstimator, data...)
+    # obtain the predictions and targets
+    predictions, targets = CalibrationErrors.predictions_targets(data...)
 
-    # perform consistency resampling and evaluate calibration error
-    estimate, straps = consistency_resampling(rng, estimator, predictions, labels, nruns)
+    # compute the calibration error estimate
+    estimate = calibrationerror(estimator, predictions, targets)
 
-    ConsistencyTest(estimator, estimate, straps)
+    ConsistencyTest(estimator, predictions, targets, estimate)
 end
+
+# HypothesisTests interface
+
+HypothesisTests.default_tail(::ConsistencyTest) = :right
 
 HypothesisTests.testname(::ConsistencyTest) =
     "Calibration test based on consistency resampling"
 
-function HypothesisTests.pvalue(test::ConsistencyTest)
-    # count number of sampled estimates greater or equal to the observed estimate
-    estimate = test.estimate
-    n = 0
-    for sample in test.straps
-        sample ≥ estimate && (n += 1)
-    end
-
-    n / length(test.straps)
+function HypothesisTests.pvalue(test::ConsistencyTest;
+                                rng::AbstractRNG = Random.GLOBAL_RNG,
+                                bootstrap_iters::Int = 1_000)
+    consistency_resampling_ccdf(rng, test, bootstrap_iters)
 end
 
-# TODO: move the following code upstream
-function consistency_resampling(rng, estimator, predictions, labels, nruns)
-    nclasses, nsamples = size(predictions)
+# parameter of interest: name, value under H0, point estimate
+function HypothesisTests.population_param_of_interest(test::ConsistencyTest)
+    nameof(typeof(test.estimator)), zero(test.estimate), test.estimate
+end
+
+HypothesisTests.show_params(io::IO, test::ConsistencyTest, ident = "") = nothing
+
+# estimate ccdf using bootstrapping - move upstream?
+
+function consistency_resampling_ccdf(rng::AbstractRNG, test::ConsistencyTest,
+                                     bootstrap_iters::Int)
+    @unpack predictions = test
+    bootstrap_iters > 0 || error("number of bootstrap samples must be positive")
 
     # use same heuristic as StatsBase to decide whether to sample predictions
     # directly or to build an alias table
     # TODO: needs proper benchmarking
+    nsamples = length(predictions)
     if nsamples < 40
-        consistency_resampling_direct(rng, estimator, predictions, labels, nruns)
+        p = consistency_resampling_ccdf_direct(rng, test, bootstrap_iters)
     else
         t = nsamples < 500 ? 64 : 32
-        if nclasses < t
-            consistency_resampling_direct(rng, estimator, predictions, labels, nruns)
+        if length(predictions[1]) < t
+            p = consistency_resampling_ccdf_direct(rng, test, bootstrap_iters)
         else
-            consistency_resampling_alias(rng, estimator, predictions, labels, nruns)
+            p = consistency_resampling_ccdf_alias(rng, test, bootstrap_iters)
         end
     end
+
+    p
 end
 
-
-# sample labels directly (without alias table)
-function consistency_resampling_direct(rng::AbstractRNG, estimator, predictions, labels,
-                                       nruns)
-    nclasses, nsamples = size(predictions)
-
-    # evaluate statistic
-    estimate = calibrationerror(estimator, (predictions, labels))
+# sample targets directly (without alias table)
+function consistency_resampling_ccdf_direct(rng::AbstractRNG, test::ConsistencyTest,
+                                            bootstrap_iters::Int)
+    @unpack estimator, predictions, targets, estimate = test
 
     # create caches
-    resampled_predictions = similar(predictions)
-    resampled_labels = similar(labels)
-    resampled_data = (resampled_predictions, resampled_labels)
-
-    # create sampler
-    sp = Random.Sampler(rng, Base.OneTo(nsamples))
-
-    # create output
-    straps = Vector{typeof(estimate)}(undef, nruns)
+    nsamples = length(predictions)
+    resampledpredictions = similar(predictions)
+    resampledtargets = similar(targets)
+    resampledidxs = Vector{Int}(undef, nsamples)
 
     # for each resampling step
-    @inbounds for i in 1:nruns
+    n = 0
+    @inbounds for _ in 1:bootstrap_iters
         # resample data
+        rand!(rng, resampledidxs, 1:nsamples)
         for j in 1:nsamples
             # resample predictions
-            idx = rand(rng, sp)
-            for k in axes(predictions, 1)
-                resampled_predictions[k, j] = predictions[k, idx]
-            end
+            idx = resampledidxs[j]
+            resampledpredictions[j] = prediction = predictions[idx]
 
-            # resample labels
+            # resample targets
             p = rand(rng)
-            cw = resampled_predictions[1, j]
-            label = 1
-            while cw < p && label < nclasses
-                label += 1
-                cw += resampled_predictions[label, j]
+            cw = prediction[1]
+            target = 1
+            while cw < p && target < length(prediction)
+                target += 1
+                cw += prediction[target]
             end
-            resampled_labels[j] = label
+            resampledtargets[j] = target
         end
 
-        # evaluate calibration error
-        straps[i] = calibrationerror(estimator, resampled_data)
+        # evaluate the calibration error
+        resampledestimate = calibrationerror(estimator, resampledpredictions,
+                                             resampledtargets)
+
+        # check if the estimate for the resampled data is ≥ the original estimate
+        if resampledestimate ≥ estimate
+            n += 1
+        end
     end
 
-    estimate, straps
+    n / bootstrap_iters
 end
 
-# sample labels with alias table
-function consistency_resampling_alias(rng::AbstractRNG, estimator, predictions, labels,
-                                      nruns)
-    nclasses, nsamples = size(predictions)
-
-    # evaluate statistic
-    estimate = calibrationerror(estimator, (predictions, labels))
+# sample targets with an alias table
+function consistency_resampling_ccdf_alias(rng::AbstractRNG, test::ConsistencyTest,
+                                           bootstrap_iters::Int)
+    @unpack estimator, predictions, targets, estimate = test
 
     # create alias table
+    nsamples = length(predictions)
+    nclasses = length(predictions[1])
     accept = [Vector{Float64}(undef, nclasses) for _ in 1:nsamples]
     alias = [Vector{Int}(undef, nclasses) for _ in 1:nsamples]
-    @inbounds for i in axes(predictions, 2)
-        StatsBase.make_alias_table!(view(predictions, :, i), 1.0, accept[i], alias[i])
+    @inbounds for i in 1:nsamples
+        StatsBase.make_alias_table!(predictions[i], 1.0, accept[i], alias[i])
     end
-
-    # create sampler of labels
-    splabels = Random.Sampler(rng, Base.OneTo(nclasses))
 
     # create caches
-    resampled_predictions = similar(predictions)
-    resampled_labels = similar(labels)
-    resampled_data = (resampled_predictions, resampled_labels)
-
-    # create sampler
-    sp = Random.Sampler(rng, Base.OneTo(nsamples))
-
-    # create output
-    straps = Vector{typeof(estimate)}(undef, nruns)
+    resampledpredictions = similar(predictions)
+    resampledtargets = similar(targets)
+    resampledidxs = Vector{Int}(undef, nsamples)
 
     # for each resampling step
-    @inbounds for i in 1:nruns
+    n = 0
+    @inbounds for _ in 1:bootstrap_iters
         # resample data
+        rand!(rng, resampledidxs, 1:nsamples)
         for j in 1:nsamples
             # resample predictions
-            idx = rand(rng, sp)
-            for k in axes(predictions, 1)
-                resampled_predictions[k, j] = predictions[k, idx]
-            end
+            idx = resampledidxs[j]
+            resampledpredictions[j] = predictions[idx]
 
-            # resample labels
-            l = rand(rng, splabels)
-            resampled_labels[j] = rand(rng) < accept[j][l] ? l : alias[j][l]
+            # resample targets
+            target = rand(rng, 1:nclasses)
+            resampledtargets[j] = rand(rng) < accept[idx][target] ? target : alias[idx][target]
         end
 
-        # evaluate calibration error
-        straps[i] = calibrationerror(estimator, resampled_data)
+        # evaluate the calibration error
+        resampledestimate = calibrationerror(estimator, resampledpredictions,
+                                              resampledtargets)
+
+        # check if the estimate for the resampled data is ≥ the original estimate
+        if resampledestimate ≥ estimate
+            n += 1
+        end
     end
 
-    estimate, straps
+    n / bootstrap_iters
 end
