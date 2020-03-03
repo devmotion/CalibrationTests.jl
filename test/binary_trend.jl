@@ -21,8 +21,8 @@ function generate_binary_data(nsamples)
 end
 const data_consistent, data_only_two = generate_binary_data(500)
 
-# define matrix-valued kernel (using the mean total variation distance as bandwidth)
-const kernel = UniformScalingKernel(ExponentialKernel(3))
+# define tensor product kernel (using the mean total variation distance as bandwidth)
+const kernel = TensorProductKernel(transform(ExponentialKernel(), 3), WhiteKernel())
 
 @testset "Consistency test" begin
     # define estimators

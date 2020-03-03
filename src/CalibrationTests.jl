@@ -9,8 +9,7 @@ using StatsFuns
 using LinearAlgebra
 using Random
 
-using CalibrationErrors: CalibrationErrorEstimator, SKCE, skce_kernel,
-    MatrixKernel
+using CalibrationErrors: CalibrationErrorEstimator, SKCE, unsafe_skce_eval
 
 export ConsistencyTest
 export DistributionFreeTest, AsymptoticLinearTest, AsymptoticQuadraticTest

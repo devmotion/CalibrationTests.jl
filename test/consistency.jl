@@ -14,7 +14,7 @@ resample_alias(rng, test) =
 @testset "ECE" begin
     ce = ECE(UniformBinning(10))
     N = 1_000
-    
+
     for nclasses in (2, 5, 10)
         println("Consistency test with ECE ($nclasses classes)")
 
@@ -65,9 +65,9 @@ resample_alias(rng, test) =
 end
 
 @testset "Linear SKCE" begin
-    ce = LinearUnbiasedSKCE(UniformScalingKernel(ExponentialKernel(0.1)))
+    ce = LinearUnbiasedSKCE(transform(ExponentialKernel(), 0.1), WhiteKernel())
     N = 1_000
-    
+
     for nclasses in (2, 5, 10)
         println("Consistency test with the linear SKCE estimator ($nclasses classes)")
 

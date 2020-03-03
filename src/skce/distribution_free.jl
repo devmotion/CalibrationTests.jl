@@ -54,15 +54,21 @@ function HypothesisTests.show_params(io::IO, test::DistributionFreeTest, ident =
 end
 
 # uniform bound `B_{p;q}` of the absolute value of the terms in the estimators
-# by default consider we assume `p = q`
-uniformbound(kce::SKCE) = 2 * uniformbound(CalibrationErrors.kernel(kce))
+uniformbound(kce::SKCE) = 2 * uniformbound(kce.kernel)
 
-# uniform bounds of the norm of scalar-valued kernels
-uniformbound(kernel::CalibrationErrors.ExponentialKernel) = exp(zero(kernel.γ))
-uniformbound(kernel::CalibrationErrors.SquaredExponentialKernel) = exp(zero(kernel.γ))
+# uniform bounds of the norm of base kernels
+uniformbound(kernel::ExponentialKernel) = 1
+uniformbound(kernel::SqExponentialKernel) = 1
+uniformbound(kernel::TVExponentialKernel) = 1
+uniformbound(kernel::WhiteKernel) = 1
 
-# uniform bounds `K_{p;q}` of the norm of matrix-valued kernels for `p = q`
-uniformbound(kernel::CalibrationErrors.UniformScalingKernel) =
-    kernel.λ * uniformbound(kernel.kernel)
-uniformbound(kernel::CalibrationErrors.DiagonalKernel) =
-    maximum(kernel.diag) * uniformbound(kernel.kernel)
+# uniform bound of the norm of a scaled kernel
+uniformbound(kernel::ScaledKernel) = first(kernel.σ) * uniformbound(kernel.kernel)
+
+# uniform bound of the norm of a kernel with input transformations
+# assume transform is bijective (i.e., transform does not affect the bound) as default
+uniformbound(kernel::TransformedKernel) = uniformbound(kernel.kernel)
+
+# uniform bounds of the norm of tensor product kernels
+uniformbound(kernel::TensorProductKernel) =
+    uniformbound(kernel.kernel1) * uniformbound(kernel.kernel2)

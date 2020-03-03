@@ -10,22 +10,29 @@ using Test
 Random.seed!(1234)
 
 @testset "bounds" begin
-    # default bounds for scalar kernels
+    # default bounds for base kernels
     CalibrationTests.uniformbound(ExponentialKernel()) == 1
-    CalibrationTests.uniformbound(SquaredExponentialKernel()) == 1
+    CalibrationTests.uniformbound(SqExponentialKernel()) == 1
+    CalibrationTests.uniformbound(TVExponentialKernel()) == 1
+    CalibrationTests.uniformbound(WhiteKernel()) == 1
 
-    # default bounds for matrix-valued kernels
-    λ = rand()
-    CalibrationTests.uniformbound(UniformScalingKernel(λ, ExponentialKernel())) == λ
-    d = rand(10)
-    CalibrationTests.uniformbound(DiagonalKernel(d, SquaredExponentialKernel())) == maximum(d)
+    # default bounds for kernels with input transformations
+    CalibrationTests.uniformbound(transform(SqExponentialKernel(), rand())) == 1
+    CalibrationTests.uniformbound(transform(TVExponentialKernel(), rand(10))) == 1
+
+    # default bounds for scaled kernels
+    CalibrationTests.uniformbound(42 * ExponentialKernel()) == 42
+
+    # default bounds for tensor product kernels
+    kernel = TensorProductKernel(3.2 * SqExponentialKernel(), 2.7 * WhiteKernel())
+    CalibrationTests.uniformbound(kernel) == 3.2 * 2.7
 
     # default bounds for kernel terms
-    CalibrationTests.uniformbound(LinearUnbiasedSKCE(UniformScalingKernel(4, ExponentialKernel()))) == 8
+    CalibrationTests.uniformbound(LinearUnbiasedSKCE(kernel)) == 2 * 3.2 * 2.7
 end
 
 @testset "estimator and estimates" begin
-    kernel = UniformScalingKernel(ExponentialKernel(0.1))
+    kernel = TensorProductKernel(transform(ExponentialKernel(), 0.1), WhiteKernel())
 
     for skce in (BiasedSKCE(kernel), QuadraticUnbiasedSKCE(kernel), LinearUnbiasedSKCE(kernel))
         for nclasses in (2, 10, 100), nsamples in (10, 50, 100)
@@ -34,11 +41,11 @@ end
             predictions = [rand(dist) for _ in 1:nsamples]
             targets_consistent = [rand(Categorical(prediction)) for prediction in predictions]
             targets_onlyone = ones(Int, length(predictions))
-        
+
             # for both sets of targets
             for targets in (targets_consistent, targets_onlyone)
                 test = DistributionFreeTest(skce, predictions, targets)
-            
+
                 @test test.estimator == skce
                 @test test.n == nsamples
                 @test test.estimate ≈ calibrationerror(skce, predictions, targets)
@@ -49,12 +56,12 @@ end
 end
 
 @testset "consistency" begin
-    kernel = UniformScalingKernel(ExponentialKernel(0.1))
+    kernel = TensorProductKernel(transform(ExponentialKernel(), 0.1), WhiteKernel())
     αs = 0.05:0.1:0.95
     nsamples = 100
 
     pvalues_consistent = Vector{Float64}(undef, 100)
-    
+
     for skce in (BiasedSKCE(kernel), QuadraticUnbiasedSKCE(kernel), LinearUnbiasedSKCE(kernel))
         for nclasses in (2, 10)
             dist = Dirichlet(nclasses, 1)
@@ -67,7 +74,7 @@ end
                     rand!(dist, predictions[j])
                     targets_consistent[j] = rand(Categorical(predictions[j]))
                 end
-            
+
                 # define test
                 test_consistent = DistributionFreeTest(skce, predictions, targets_consistent)
 
