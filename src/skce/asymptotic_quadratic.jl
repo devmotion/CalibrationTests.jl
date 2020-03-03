@@ -31,8 +31,9 @@ end
 
 HypothesisTests.default_tail(::AsymptoticQuadraticTest) = :right
 
-function HypothesisTests.pvalue(test::AsymptoticQuadraticTest;
-                                rng::AbstractRNG = Random.GLOBAL_RNG,
+HypothesisTests.pvalue(test::AsymptoticQuadraticTest; kwargs...) =
+    pvalue(Random.GLOBAL_RNG, test; kwargs...)
+function HypothesisTests.pvalue(rng::AbstractRNG, test::AsymptoticQuadraticTest;
                                 bootstrap_iters::Int = 1_000)
     bootstrap_ccdf(rng, test, bootstrap_iters)
 end
