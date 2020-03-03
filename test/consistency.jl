@@ -14,7 +14,7 @@ resample_alias(rng, test) =
 @testset "ECE" begin
     ce = ECE(UniformBinning(10))
     N = 1_000
-    
+
     for nclasses in (2, 5, 10)
         println("Consistency test with ECE ($nclasses classes)")
 
@@ -31,7 +31,7 @@ resample_alias(rng, test) =
 
         # compute pvalues with both resampling methods
         Random.seed!(1234)
-        pvalues = [pvalue(test_consistent; rng = Random.GLOBAL_RNG) for _ in 1:N]
+        pvalues = [pvalue(Random.GLOBAL_RNG, test_consistent) for _ in 1:N]
 
         Random.seed!(1111)
         pvalues_direct = [resample_direct(Random.GLOBAL_RNG, test_consistent) for _ in 1:N]
@@ -50,7 +50,7 @@ resample_alias(rng, test) =
         @test mean(pvalues_alias) ≈ mean(pvalues) atol = 1e-2
 
         Random.seed!(1234)
-        pvalues = [pvalue(test_onlyone; rng = Random.GLOBAL_RNG) for _ in 1:N]
+        pvalues = [pvalue(Random.GLOBAL_RNG, test_onlyone) for _ in 1:N]
 
         Random.seed!(1111)
         pvalues_direct = [resample_direct(Random.GLOBAL_RNG, test_onlyone) for _ in 1:N]
@@ -65,9 +65,9 @@ resample_alias(rng, test) =
 end
 
 @testset "Linear SKCE" begin
-    ce = LinearUnbiasedSKCE(UniformScalingKernel(ExponentialKernel(0.1)))
+    ce = LinearUnbiasedSKCE(transform(ExponentialKernel(), 0.1), WhiteKernel())
     N = 1_000
-    
+
     for nclasses in (2, 5, 10)
         println("Consistency test with the linear SKCE estimator ($nclasses classes)")
 
@@ -84,7 +84,7 @@ end
 
         # compute pvalues with both resampling methods
         Random.seed!(1234)
-        pvalues = [pvalue(test_consistent; rng = Random.GLOBAL_RNG) for _ in 1:N]
+        pvalues = [pvalue(Random.GLOBAL_RNG, test_consistent) for _ in 1:N]
 
         Random.seed!(1111)
         pvalues_direct = [resample_direct(Random.GLOBAL_RNG, test_consistent) for _ in 1:N]
@@ -103,7 +103,7 @@ end
         @test mean(pvalues_alias) ≈ mean(pvalues) atol = 1e-2
 
         Random.seed!(1234)
-        pvalues = [pvalue(test_onlyone; rng = Random.GLOBAL_RNG) for _ in 1:N]
+        pvalues = [pvalue(Random.GLOBAL_RNG, test_onlyone) for _ in 1:N]
 
         Random.seed!(1111)
         pvalues_direct = [resample_direct(Random.GLOBAL_RNG, test_onlyone) for _ in 1:N]

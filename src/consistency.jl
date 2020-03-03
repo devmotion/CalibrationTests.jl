@@ -26,8 +26,9 @@ HypothesisTests.default_tail(::ConsistencyTest) = :right
 HypothesisTests.testname(::ConsistencyTest) =
     "Calibration test based on consistency resampling"
 
-function HypothesisTests.pvalue(test::ConsistencyTest;
-                                rng::AbstractRNG = Random.GLOBAL_RNG,
+HypothesisTests.pvalue(test::ConsistencyTest; kwargs...) =
+    pvalue(Random.GLOBAL_RNG, test; kwargs...)
+function HypothesisTests.pvalue(rng::Random.AbstractRNG, test::ConsistencyTest;
                                 bootstrap_iters::Int = 1_000)
     consistency_resampling_ccdf(rng, test, bootstrap_iters)
 end

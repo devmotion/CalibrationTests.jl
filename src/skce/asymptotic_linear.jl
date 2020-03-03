@@ -1,5 +1,5 @@
-struct AsymptoticLinearTest{K<:MatrixKernel,E,S,Z} <: HypothesisTests.ZTest
-    """Matrix-valued kernel."""
+struct AsymptoticLinearTest{K<:Kernel,E,S,Z} <: HypothesisTests.ZTest
+    """Kernel."""
     kernel::K
     """Number of pairs of observations."""
     n::Int
@@ -14,46 +14,47 @@ end
 AsymptoticLinearTest(skce::LinearUnbiasedSKCE, data...) =
     AsymptoticLinearTest(skce.kernel, data...)
 
-function AsymptoticLinearTest(kernel::MatrixKernel, data...)
+AsymptoticLinearTest(kernel1::Kernel, kernel2::Kernel, data...) =
+    AsymptoticLinearTest(TensorProductKernel(kernel1, kernel2), data...)
+
+function AsymptoticLinearTest(kernel::Kernel, data...)
     # obtain predictions and targets
     predictions, targets = CalibrationErrors.predictions_targets(data...)
 
     # obtain number of samples
     nsamples = length(predictions)
     nsamples ≥ 2 || error("there must be at least two samples")
-    
+
     @inbounds begin
-        # evaluate kernel function for the first pair of samples
-        result = skce_kernel(kernel, predictions[1], targets[1], predictions[2],
-                             targets[2])
-        
-        # use Welford algorithm to estimate mean and variance of the evaluations
-        M = result / 1
-        S = zero(M)
-    
+        # evaluate the kernel function for the first pair of samples
+        hij = unsafe_skce_eval(kernel, predictions[1], targets[1], predictions[2], targets[2])
+
+        # initialize the estimate and the sum of squares
+        estimate = hij / 1
+        S = zero(hij)
+
         # add evaluations of all subsequent pairs of samples
         n = 1
         for i in 3:2:(nsamples - 1)
-            # update number of summands
-            n += 1
-    
-            # evaluate kernel function for next two samples and update estimate
             j = i + 1
-            result = skce_kernel(kernel, predictions[i], targets[i], predictions[j],
-                                 targets[j])
-            
-            # update mean and sum of squares
-            ΔM = result - M
-            M += ΔM / n
-            S += ΔM * (result - M)
+
+            # evaluate the kernel function
+            hij = unsafe_skce_eval(kernel, predictions[i], targets[i], predictions[j],
+                                   targets[j])
+
+            # update the estimate and the sum of squares
+            n += 1
+            Δestimate = hij - estimate
+            estimate += Δestimate / n
+            S += Δestimate * (hij - estimate)
         end
     end
 
     # compute standard error and z-statistic
     stderr = sqrt(S) / n
-    z = M / stderr
+    z = estimate / stderr
 
-    AsymptoticLinearTest(kernel, n, M, stderr, z)
+    AsymptoticLinearTest(kernel, n, estimate, stderr, z)
 end
 
 # HypothesisTests interface

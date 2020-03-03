@@ -9,7 +9,7 @@ using Test
 Random.seed!(1234)
 
 @testset "estimate and statistic" begin
-    kernel = UniformScalingKernel(ExponentialKernel(0.1))
+    kernel = TensorProductKernel(transform(ExponentialKernel(), 0.1), WhiteKernel())
     biasedskce = BiasedSKCE(kernel)
     unbiasedskce = QuadraticUnbiasedSKCE(kernel)
 
@@ -19,7 +19,7 @@ Random.seed!(1234)
         predictions = [rand(dist) for _ in 1:nsamples]
         targets_consistent = [rand(Categorical(prediction)) for prediction in predictions]
         targets_onlyone = ones(Int, length(predictions))
-        
+
         # compute calibration error estimate and test statistic
         for targets in (targets_consistent, targets_onlyone)
             estimate, statistic = CalibrationTests.estimate_statistic(kernel, predictions, targets)
@@ -31,13 +31,13 @@ Random.seed!(1234)
 end
 
 @testset "consistency" begin
-    skce = QuadraticUnbiasedSKCE(UniformScalingKernel(ExponentialKernel(0.1)))
+    skce = QuadraticUnbiasedSKCE(transform(ExponentialKernel(), 0.1), WhiteKernel())
     αs = 0.05:0.1:0.95
     nsamples = 100
 
     pvalues_consistent = Vector{Float64}(undef, 100)
     pvalues_onlyone = similar(pvalues_consistent)
-    
+
     for nclasses in (2, 10)
         dist = Dirichlet(nclasses, 1)
         predictions = [Vector{Float64}(undef, nclasses) for _ in 1:nsamples]
@@ -50,7 +50,7 @@ end
                 rand!(dist, predictions[j])
                 targets_consistent[j] = rand(Categorical(predictions[j]))
             end
-            
+
             # define test
             test_consistent = AsymptoticQuadraticTest(skce, predictions, targets_consistent)
             test_onlyone = AsymptoticQuadraticTest(skce, predictions, targets_onlyone)

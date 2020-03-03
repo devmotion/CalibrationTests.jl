@@ -1,5 +1,5 @@
-struct AsymptoticQuadraticTest{K<:MatrixKernel,P,T,E,V} <: HypothesisTests.HypothesisTest
-    """Matrix-valued kernel."""
+struct AsymptoticQuadraticTest{K<:Kernel,P,T,E,V} <: HypothesisTests.HypothesisTest
+    """Kernel."""
     kernel::K
     """Predictions."""
     predictions::P
@@ -14,7 +14,10 @@ end
 AsymptoticQuadraticTest(skce::QuadraticUnbiasedSKCE, data...; kwargs...) =
     AsymptoticQuadraticTest(skce.kernel, data...; kwargs...)
 
-function AsymptoticQuadraticTest(kernel::MatrixKernel, data...)
+AsymptoticQuadraticTest(kernel1::Kernel, kernel2::Kernel, data...; kwargs...) =
+    AsymptoticQuadraticTest(TensorProductKernel(kernel1, kernel2), data...; kwargs...)
+
+function AsymptoticQuadraticTest(kernel::Kernel, data...)
     # obtain the predictions and targets
     predictions, targets = CalibrationErrors.predictions_targets(data...)
 
@@ -28,8 +31,9 @@ end
 
 HypothesisTests.default_tail(::AsymptoticQuadraticTest) = :right
 
-function HypothesisTests.pvalue(test::AsymptoticQuadraticTest;
-                                rng::AbstractRNG = Random.GLOBAL_RNG,
+HypothesisTests.pvalue(test::AsymptoticQuadraticTest; kwargs...) =
+    pvalue(Random.GLOBAL_RNG, test; kwargs...)
+function HypothesisTests.pvalue(rng::AbstractRNG, test::AsymptoticQuadraticTest;
                                 bootstrap_iters::Int = 1_000)
     bootstrap_ccdf(rng, test, bootstrap_iters)
 end
@@ -48,9 +52,9 @@ end
 
 # compute the unbiased estimate of the SKCE and the test statistic
 # `nsamples / (nsamples - 1) * SKCEuq - SKCEb`.
-function estimate_statistic(kernel::MatrixKernel,
-                            predictions::AbstractVector{<:AbstractVector{<:Real}},
-                            targets::AbstractVector{<:Integer})
+function estimate_statistic(kernel::Kernel,
+                            predictions::AbstractVector,
+                            targets::AbstractVector)
     # obtain number of samples
     nsamples = length(predictions)
     nsamples > 1 || error("there must be at least two samples")
@@ -59,17 +63,17 @@ function estimate_statistic(kernel::MatrixKernel,
     α = (2 * nsamples  - 1) / (nsamples - 1)^2
 
     @inbounds begin
-        # evaluate kernel function for the first sample
+        # evaluate the kernel function for the first pair of samples
         prediction = predictions[1]
         target = targets[1]
 
         # initialize the test statistic and the unbiased estimate of the SKCE
-        statistic = -skce_kernel(kernel, prediction, target, prediction, target) / 1
+        statistic = -unsafe_skce_eval(kernel, prediction, target, prediction, target) / 1
         estimate = zero(statistic)
 
         # add evaluations of all other pairs of samples
         nstatistic = 1
-        nestimate = 0 
+        nestimate = 0
         for i in 2:nsamples
             predictioni = predictions[i]
             targeti = targets[i]
@@ -79,7 +83,7 @@ function estimate_statistic(kernel::MatrixKernel,
                 targetj = targets[j]
 
                 # evaluate the kernel function
-                result = skce_kernel(kernel, predictioni, targeti, predictionj, targetj)
+                result = unsafe_skce_eval(kernel, predictioni, targeti, predictionj, targetj)
 
                 # update the estimate and the test statistic
                 nstatistic += 2
@@ -90,7 +94,7 @@ function estimate_statistic(kernel::MatrixKernel,
 
             # evaluate the kernel function for the `i`th sample
             nstatistic += 1
-            result = skce_kernel(kernel, predictioni, targeti, predictioni, targeti)
+            result = unsafe_skce_eval(kernel, predictioni, targeti, predictioni, targeti)
             statistic -= (statistic + result) / nstatistic
         end
     end
@@ -128,8 +132,8 @@ function bootstrap_ccdf(rng::AbstractRNG, test::AsymptoticQuadraticTest,
                 idxj = resampledidxs[j]
 
                 # evaluate the kernel function
-                result = skce_kernel(kernel, predictioni, targeti, predictions[idxj],
-                                     targets[idxj])
+                result = unsafe_skce_eval(kernel, predictioni, targeti, predictions[idxj],
+                                          targets[idxj])
 
                 # update the running mean
                 nij += 1
@@ -139,8 +143,8 @@ function bootstrap_ccdf(rng::AbstractRNG, test::AsymptoticQuadraticTest,
             # evaluate combinations of bootstrapped samples and original samples
             @inbounds for k in 1:nsamples
                 # evaluate the kernel function
-                result = skce_kernel(kernel, predictioni, targeti, predictions[k],
-                                     targets[k])
+                result = unsafe_skce_eval(kernel, predictioni, targeti, predictions[k],
+                                          targets[k])
 
                 # update the running mean
                 nik += 1
