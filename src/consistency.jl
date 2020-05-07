@@ -23,8 +23,7 @@ end
 
 HypothesisTests.default_tail(::ConsistencyTest) = :right
 
-HypothesisTests.testname(::ConsistencyTest) =
-    "Calibration test based on consistency resampling"
+HypothesisTests.testname(::ConsistencyTest) = "Consistency resampling test"
 
 HypothesisTests.pvalue(test::ConsistencyTest; kwargs...) =
     pvalue(Random.GLOBAL_RNG, test; kwargs...)

@@ -9,9 +9,9 @@ using Test
 Random.seed!(1234)
 
 @testset "estimate and statistic" begin
-    kernel = TensorProductKernel(transform(ExponentialKernel(), 0.1), WhiteKernel())
+    kernel = TensorProduct(transform(ExponentialKernel(), 0.1), WhiteKernel())
     biasedskce = BiasedSKCE(kernel)
-    unbiasedskce = QuadraticUnbiasedSKCE(kernel)
+    unbiasedskce = UnbiasedSKCE(kernel)
 
     for nclasses in (2, 10, 100), nsamples in (10, 50, 100)
         # sample predictions and targets
@@ -31,7 +31,7 @@ Random.seed!(1234)
 end
 
 @testset "consistency" begin
-    skce = QuadraticUnbiasedSKCE(transform(ExponentialKernel(), 0.1), WhiteKernel())
+    skce = UnbiasedSKCE(transform(ExponentialKernel(), 0.1), WhiteKernel())
     αs = 0.05:0.1:0.95
     nsamples = 100
 
@@ -52,8 +52,8 @@ end
             end
 
             # define test
-            test_consistent = AsymptoticQuadraticTest(skce, predictions, targets_consistent)
-            test_onlyone = AsymptoticQuadraticTest(skce, predictions, targets_onlyone)
+            test_consistent = AsymptoticSKCETest(skce, predictions, targets_consistent)
+            test_onlyone = AsymptoticSKCETest(skce, predictions, targets_onlyone)
 
             # estimate pvalues
             pvalues_consistent[i] = pvalue(test_consistent; bootstrap_iters = 200)
@@ -61,7 +61,7 @@ end
         end
 
         # compute empirical test errors
-        @test ecdf(pvalues_consistent).(αs) ≈ αs atol = 0.1
+        @test all(ecdf(pvalues_consistent)(α) ≤ α + 0.08 for α in αs)
         @test all(iszero, 1 .- ecdf(pvalues_onlyone).(αs))
     end
 end

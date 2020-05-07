@@ -1,4 +1,4 @@
-struct DistributionFreeTest{E<:SKCE,B,V} <: HypothesisTests.HypothesisTest
+struct DistributionFreeSKCETest{E<:SKCE,B,V} <: HypothesisTests.HypothesisTest
     """Calibration estimator."""
     estimator::E
     """Uniform upper bound of the terms of the estimator."""
@@ -9,21 +9,21 @@ struct DistributionFreeTest{E<:SKCE,B,V} <: HypothesisTests.HypothesisTest
     estimate::V
 end
 
-function DistributionFreeTest(estimator::SKCE, data...; bound = uniformbound(estimator))
+function DistributionFreeSKCETest(estimator::SKCE, data...; bound = uniformbound(estimator))
     # obtain the predictions and targets
     predictions, targets = CalibrationErrors.predictions_targets(data...)
 
     # compute the calibration error estimate
     estimate = calibrationerror(estimator, predictions, targets)
 
-    DistributionFreeTest(estimator, bound, length(predictions), estimate)
+    DistributionFreeSKCETest(estimator, bound, length(predictions), estimate)
 end
 
 # HypothesisTests interface
 
-HypothesisTests.default_tail(::DistributionFreeTest) = :right
+HypothesisTests.default_tail(::DistributionFreeSKCETest) = :right
 
-function HypothesisTests.pvalue(test::DistributionFreeTest{<:BiasedSKCE})
+function HypothesisTests.pvalue(test::DistributionFreeSKCETest{<:BiasedSKCE})
     @unpack bound, n, estimate = test
 
     s = sqrt(n * estimate / bound) - 1
@@ -34,21 +34,21 @@ function HypothesisTests.pvalue(test::DistributionFreeTest{<:BiasedSKCE})
     exp(- s^2 / 2)
 end
 
-function HypothesisTests.pvalue(test::DistributionFreeTest{<:Union{QuadraticUnbiasedSKCE,
-                                                                   LinearUnbiasedSKCE}})
+function HypothesisTests.pvalue(test::DistributionFreeSKCETest{<:Union{UnbiasedSKCE,
+                                                                       BlockUnbiasedSKCE}})
     @unpack bound, n, estimate = test
 
     exp(- div(n, 2) * estimate^2 / (2 * bound ^ 2))
 end
 
-HypothesisTests.testname(::DistributionFreeTest) = "Distribution-free calibration test"
+HypothesisTests.testname(::DistributionFreeSKCETest) = "Distribution-free SKCE test"
 
 # parameter of interest: name, value under H0, point estimate
-function HypothesisTests.population_param_of_interest(test::DistributionFreeTest)
+function HypothesisTests.population_param_of_interest(test::DistributionFreeSKCETest)
     nameof(typeof(test.estimator)), zero(test.estimate), test.estimate
 end
 
-function HypothesisTests.show_params(io::IO, test::DistributionFreeTest, ident = "")
+function HypothesisTests.show_params(io::IO, test::DistributionFreeSKCETest, ident = "")
     println(io, ident, "number of observations: $(test.n)")
     println(io, ident, "uniform bound of the terms of the estimator: $(test.bound)")
 end
@@ -70,5 +70,4 @@ uniformbound(kernel::ScaledKernel) = first(kernel.σ²) * uniformbound(kernel.ke
 uniformbound(kernel::TransformedKernel) = uniformbound(kernel.kernel)
 
 # uniform bounds of the norm of tensor product kernels
-uniformbound(kernel::TensorProductKernel) =
-    uniformbound(kernel.kernel1) * uniformbound(kernel.kernel2)
+uniformbound(kernel::TensorProduct) = prod(uniformbound, kernel.kernels)

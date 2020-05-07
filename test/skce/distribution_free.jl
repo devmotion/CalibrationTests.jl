@@ -24,17 +24,17 @@ Random.seed!(1234)
     CalibrationTests.uniformbound(42 * ExponentialKernel()) == 42
 
     # default bounds for tensor product kernels
-    kernel = TensorProductKernel(3.2 * SqExponentialKernel(), 2.7 * WhiteKernel())
+    kernel = TensorProduct(3.2 * SqExponentialKernel(), 2.7 * WhiteKernel())
     CalibrationTests.uniformbound(kernel) == 3.2 * 2.7
 
     # default bounds for kernel terms
-    CalibrationTests.uniformbound(LinearUnbiasedSKCE(kernel)) == 2 * 3.2 * 2.7
+    CalibrationTests.uniformbound(BlockUnbiasedSKCE(kernel)) == 2 * 3.2 * 2.7
 end
 
 @testset "estimator and estimates" begin
-    kernel = TensorProductKernel(transform(ExponentialKernel(), 0.1), WhiteKernel())
+    kernel = TensorProduct(transform(ExponentialKernel(), 0.1), WhiteKernel())
 
-    for skce in (BiasedSKCE(kernel), QuadraticUnbiasedSKCE(kernel), LinearUnbiasedSKCE(kernel))
+    for skce in (BiasedSKCE(kernel), UnbiasedSKCE(kernel), BlockUnbiasedSKCE(kernel))
         for nclasses in (2, 10, 100), nsamples in (10, 50, 100)
             # sample predictions and targets
             dist = Dirichlet(nclasses, 1)
@@ -44,7 +44,7 @@ end
 
             # for both sets of targets
             for targets in (targets_consistent, targets_onlyone)
-                test = DistributionFreeTest(skce, predictions, targets)
+                test = DistributionFreeSKCETest(skce, predictions, targets)
 
                 @test test.estimator == skce
                 @test test.n == nsamples
@@ -56,13 +56,13 @@ end
 end
 
 @testset "consistency" begin
-    kernel = TensorProductKernel(transform(ExponentialKernel(), 0.1), WhiteKernel())
+    kernel = TensorProduct(transform(ExponentialKernel(), 0.1), WhiteKernel())
     αs = 0.05:0.1:0.95
     nsamples = 100
 
     pvalues_consistent = Vector{Float64}(undef, 100)
 
-    for skce in (BiasedSKCE(kernel), QuadraticUnbiasedSKCE(kernel), LinearUnbiasedSKCE(kernel))
+    for skce in (BiasedSKCE(kernel), UnbiasedSKCE(kernel), BlockUnbiasedSKCE(kernel))
         for nclasses in (2, 10)
             dist = Dirichlet(nclasses, 1)
             predictions = [Vector{Float64}(undef, nclasses) for _ in 1:nsamples]
@@ -76,7 +76,8 @@ end
                 end
 
                 # define test
-                test_consistent = DistributionFreeTest(skce, predictions, targets_consistent)
+                test_consistent = DistributionFreeSKCETest(skce, predictions,
+                                                           targets_consistent)
 
                 # estimate pvalue
                 pvalues_consistent[i] = pvalue(test_consistent)

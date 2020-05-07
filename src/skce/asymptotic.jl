@@ -1,4 +1,4 @@
-struct AsymptoticQuadraticTest{K<:Kernel,P,T,E,V} <: HypothesisTests.HypothesisTest
+struct AsymptoticSKCETest{K<:Kernel,P,T,E,V} <: HypothesisTests.HypothesisTest
     """Kernel."""
     kernel::K
     """Predictions."""
@@ -11,42 +11,41 @@ struct AsymptoticQuadraticTest{K<:Kernel,P,T,E,V} <: HypothesisTests.HypothesisT
     statistic::V
 end
 
-AsymptoticQuadraticTest(skce::QuadraticUnbiasedSKCE, data...; kwargs...) =
-    AsymptoticQuadraticTest(skce.kernel, data...; kwargs...)
+AsymptoticSKCETest(skce::UnbiasedSKCE, data...; kwargs...) =
+    AsymptoticSKCETest(skce.kernel, data...; kwargs...)
 
-AsymptoticQuadraticTest(kernel1::Kernel, kernel2::Kernel, data...; kwargs...) =
-    AsymptoticQuadraticTest(TensorProductKernel(kernel1, kernel2), data...; kwargs...)
+AsymptoticSKCETest(kernel1::Kernel, kernel2::Kernel, data...; kwargs...) =
+    AsymptoticSKCETest(TensorProduct(kernel1, kernel2), data...; kwargs...)
 
-function AsymptoticQuadraticTest(kernel::Kernel, data...)
+function AsymptoticSKCETest(kernel::Kernel, data...)
     # obtain the predictions and targets
     predictions, targets = CalibrationErrors.predictions_targets(data...)
 
     # compute the calibration error estimate and the test statistic
     estimate, statistic = estimate_statistic(kernel, predictions, targets)
 
-    AsymptoticQuadraticTest(kernel, predictions, targets, estimate, statistic)
+    AsymptoticSKCETest(kernel, predictions, targets, estimate, statistic)
 end
 
 # HypothesisTests interface
 
-HypothesisTests.default_tail(::AsymptoticQuadraticTest) = :right
+HypothesisTests.default_tail(::AsymptoticSKCETest) = :right
 
-HypothesisTests.pvalue(test::AsymptoticQuadraticTest; kwargs...) =
+HypothesisTests.pvalue(test::AsymptoticSKCETest; kwargs...) =
     pvalue(Random.GLOBAL_RNG, test; kwargs...)
-function HypothesisTests.pvalue(rng::AbstractRNG, test::AsymptoticQuadraticTest;
+function HypothesisTests.pvalue(rng::AbstractRNG, test::AsymptoticSKCETest;
                                 bootstrap_iters::Int = 1_000)
     bootstrap_ccdf(rng, test, bootstrap_iters)
 end
 
-HypothesisTests.testname(::AsymptoticQuadraticTest) =
-    "Asymptotic calibration test based on the quadratic unbiased SKCE estimator"
+HypothesisTests.testname(::AsymptoticSKCETest) = "Asymptotic SKCE test"
 
 # parameter of interest: name, value under H0, point estimate
-function HypothesisTests.population_param_of_interest(test::AsymptoticQuadraticTest)
+function HypothesisTests.population_param_of_interest(test::AsymptoticSKCETest)
     "SKCE", zero(test.estimate), test.estimate
 end
 
-function HypothesisTests.show_params(io::IO, test::AsymptoticQuadraticTest, ident = "")
+function HypothesisTests.show_params(io::IO, test::AsymptoticSKCETest, ident = "")
     println(io, ident, "test statistic: $(test.statistic)")
 end
 
@@ -103,7 +102,7 @@ function estimate_statistic(kernel::Kernel,
 end
 
 # estimate the ccdf using bootstrapping
-function bootstrap_ccdf(rng::AbstractRNG, test::AsymptoticQuadraticTest,
+function bootstrap_ccdf(rng::AbstractRNG, test::AsymptoticSKCETest,
                         bootstrap_iters::Int)
     @unpack kernel, predictions, targets, statistic = test
 
