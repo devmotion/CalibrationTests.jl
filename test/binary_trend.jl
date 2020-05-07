@@ -22,16 +22,16 @@ end
 const data_consistent, data_only_two = generate_binary_data(500)
 
 # define tensor product kernel (using the mean total variation distance as bandwidth)
-const kernel = TensorProductKernel(transform(ExponentialKernel(), 3), WhiteKernel())
+const kernel = TensorProduct(transform(ExponentialKernel(), 3), WhiteKernel())
 
 @testset "Consistency test" begin
     # define estimators
-    estimators = (ECE(UniformBinning(10)), BiasedSKCE(kernel),
-                  LinearUnbiasedSKCE(kernel), QuadraticUnbiasedSKCE(kernel))
+    estimators = (BiasedSKCE(kernel), UnbiasedSKCE(kernel),
+                  (BlockUnbiasedSKCE(kernel, b) for b in (2, 10, 50, 100))...)
 
     for estimator in estimators
         test_consistent = ConsistencyTest(estimator, data_consistent)
-        @test pvalue(test_consistent) > 0.7
+        @test pvalue(test_consistent) > 0.6
         print(test_consistent)
 
         test_only_two = ConsistencyTest(estimator, data_only_two)
@@ -42,16 +42,16 @@ end
 
 @testset "Distribution-free tests" begin
     # define estimators
-    estimators = (BiasedSKCE(kernel), LinearUnbiasedSKCE(kernel),
-                  QuadraticUnbiasedSKCE(kernel))
+    estimators = (BiasedSKCE(kernel), UnbiasedSKCE(kernel),
+                  (BlockUnbiasedSKCE(kernel, b) for b in (2, 10, 50, 100))...)
 
     for estimator in estimators
-        test_consistent = DistributionFreeTest(estimator, data_consistent)
+        test_consistent = DistributionFreeSKCETest(estimator, data_consistent)
         @test pvalue(test_consistent) > 0.7
         println(test_consistent)
 
-        test_only_two = DistributionFreeTest(estimator, data_only_two)
-        if estimator isa Union{LinearUnbiasedSKCE,QuadraticUnbiasedSKCE}
+        test_only_two = DistributionFreeSKCETest(estimator, data_only_two)
+        if estimator isa Union{UnbiasedSKCE,BlockUnbiasedSKCE}
             @test pvalue(test_only_two) < 0.4
         else
             @test pvalue(test_only_two) < 1e-6
@@ -60,22 +60,24 @@ end
     end
 end
 
-@testset "Asymptotic linear test" begin
-    test_consistent = AsymptoticLinearTest(kernel, data_consistent)
-    @test pvalue(test_consistent) > 0.7
-    println(test_consistent)
+@testset "Asymptotic block SKCE test" begin
+    for blocksize in (2, 10, 50, 100)
+        test_consistent = AsymptoticBlockSKCETest(kernel, blocksize, data_consistent)
+        @test pvalue(test_consistent) > 0.7
+        println(test_consistent)
 
-    test_only_two = AsymptoticLinearTest(kernel, data_only_two)
-    @test pvalue(test_only_two) < 1e-6
-    println(test_only_two)
+        test_only_two = AsymptoticBlockSKCETest(kernel, blocksize, data_only_two)
+        @test pvalue(test_only_two) < 1e-6
+        println(test_only_two)
+    end
 end
 
-@testset "Asymptotic quadratic test" begin
-    test_consistent = AsymptoticQuadraticTest(kernel, data_consistent)
+@testset "Asymptotic SKCE test" begin
+    test_consistent = AsymptoticSKCETest(kernel, data_consistent)
     @test pvalue(test_consistent) > 0.7
     println(test_consistent)
 
-    test_only_two = AsymptoticQuadraticTest(kernel, data_only_two)
+    test_only_two = AsymptoticSKCETest(kernel, data_only_two)
     @test pvalue(test_only_two) < 1e-6
     println(test_only_two)
 end
