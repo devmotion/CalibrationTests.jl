@@ -63,7 +63,7 @@ uniformbound(kernel::TVExponentialKernel) = 1
 uniformbound(kernel::WhiteKernel) = 1
 
 # uniform bound of the norm of a scaled kernel
-uniformbound(kernel::ScaledKernel) = first(kernel.σ) * uniformbound(kernel.kernel)
+uniformbound(kernel::ScaledKernel) = first(kernel.σ²) * uniformbound(kernel.kernel)
 
 # uniform bound of the norm of a kernel with input transformations
 # assume transform is bijective (i.e., transform does not affect the bound) as default
