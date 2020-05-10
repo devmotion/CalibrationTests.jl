@@ -35,6 +35,7 @@ function AsymptoticBlockSKCETest(kernel::Kernel, blocksize::Int, data...)
 
     # compute number of blocks
     nblocks = nsamples ÷ blocksize
+    nblocks ≥ 2 || error("there must be at least 2 blocks")
 
     # evaluate U-statistic of the first block
     istart = 1
@@ -43,7 +44,7 @@ function AsymptoticBlockSKCETest(kernel::Kernel, blocksize::Int, data...)
 
     # initialize the estimate and the sum of squares
     estimate = x / 1
-    S = zero(x)
+    S = zero(estimate)^2
 
     # for all other blocks
     for b in 2:nblocks
@@ -60,7 +61,7 @@ function AsymptoticBlockSKCETest(kernel::Kernel, blocksize::Int, data...)
     end
 
     # compute standard error and z-statistic
-    stderr = sqrt(S) / nblocks
+    stderr = sqrt(S / (nblocks * (nblocks - 1)))
     z = estimate / stderr
 
     return AsymptoticBlockSKCETest(kernel, blocksize, nblocks, estimate, stderr, z)
