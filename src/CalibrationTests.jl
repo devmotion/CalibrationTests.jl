@@ -2,7 +2,7 @@ module CalibrationTests
 
 using CalibrationErrors
 using HypothesisTests
-using Parameters
+using UnPack
 using StatsBase
 using StatsFuns
 
