@@ -42,7 +42,7 @@ Random.seed!(1234)
                     q = norminvcdf(α)
                     @test confint(test; level = α) ==
                         confint(test; level = α, tail = :right) ==
-                        (test.estimate - q * test.stderr, Inf)
+                        (max(0, test.estimate - q * test.stderr), Inf)
                     @test_throws ArgumentError confint(test; level = α, tail = :left)
                     @test_throws ArgumentError confint(test; level = α, tail = :both)
                 end

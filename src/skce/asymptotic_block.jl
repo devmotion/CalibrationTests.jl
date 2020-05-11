@@ -89,7 +89,7 @@ function StatsBase.confint(test::AsymptoticBlockSKCETest; level = 0.95, tail = :
     if tail === :right
         q = norminvcdf(level)
         lowerbound = test.estimate - q * test.stderr
-        (lowerbound, oftype(lowerbound, Inf))
+        (max(zero(lowerbound), lowerbound), oftype(lowerbound, Inf))
     else
         throw(ArgumentError("tail = $(tail) is invalid"))
     end
