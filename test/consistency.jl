@@ -111,9 +111,9 @@ end
                 if nclasses == 2
                     @test mean(pvalues) ≈ 0.01 atol = 1e-2
                 elseif nclasses == 5
-                    @test mean(pvalues) ≈ 0.81 atol = 1e-2
+                    @test mean(pvalues) ≈ 0.63 atol = 1e-2
                 elseif nclasses == 10
-                    @test mean(pvalues) ≈ 0.34 atol = 1e-2
+                    @test mean(pvalues) ≈ 0.21 atol = 1e-2
                 end
             end
 
