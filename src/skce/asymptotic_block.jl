@@ -40,7 +40,7 @@ function AsymptoticBlockSKCETest(kernel::Kernel, blocksize::Int, data...)
     # evaluate U-statistic of the first block
     istart = 1
     iend = blocksize
-    x = CalibrationErrors.unsafe_unbiasedskce(kernel, predictions, targets, istart, iend)
+    x = CalibrationErrors.unbiasedskce(kernel, view(predictions, istart:iend), view(targets, istart:iend))
 
     # initialize the estimate and the sum of squares
     estimate = x / 1
@@ -51,8 +51,7 @@ function AsymptoticBlockSKCETest(kernel::Kernel, blocksize::Int, data...)
         # evaluate U-statistic
         istart += blocksize
         iend += blocksize
-        x = CalibrationErrors.unsafe_unbiasedskce(kernel, predictions, targets, istart,
-                                                  iend)
+        x = CalibrationErrors.unbiasedskce(kernel, view(predictions, istart:iend), view(targets, istart:iend))
 
         # update the estimate
         Δestimate = x - estimate
