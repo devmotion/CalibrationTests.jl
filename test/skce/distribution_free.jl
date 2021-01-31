@@ -24,7 +24,7 @@ Random.seed!(1234)
     CalibrationTests.uniformbound(42 * ExponentialKernel()) == 42
 
     # default bounds for tensor product kernels
-    kernel = TensorProduct(3.2 * SqExponentialKernel(), 2.7 * WhiteKernel())
+    kernel = (3.2 * SqExponentialKernel()) ⊗ (2.7 * WhiteKernel())
     CalibrationTests.uniformbound(kernel) == 3.2 * 2.7
 
     # default bounds for kernel terms
@@ -32,7 +32,7 @@ Random.seed!(1234)
 end
 
 @testset "estimator and estimates" begin
-    kernel = TensorProduct(transform(ExponentialKernel(), 0.1), WhiteKernel())
+    kernel = transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel()
 
     for skce in (BiasedSKCE(kernel), UnbiasedSKCE(kernel), BlockUnbiasedSKCE(kernel))
         for nclasses in (2, 10, 100), nsamples in (10, 50, 100)
@@ -56,7 +56,7 @@ end
 end
 
 @testset "consistency" begin
-    kernel = TensorProduct(transform(ExponentialKernel(), 0.1), WhiteKernel())
+    kernel = transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel()
     αs = 0.05:0.1:0.95
     nsamples = 100
 

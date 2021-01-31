@@ -14,9 +14,6 @@ end
 AsymptoticSKCETest(skce::UnbiasedSKCE, data...; kwargs...) =
     AsymptoticSKCETest(skce.kernel, data...; kwargs...)
 
-AsymptoticSKCETest(kernel1::Kernel, kernel2::Kernel, data...; kwargs...) =
-    AsymptoticSKCETest(TensorProduct(kernel1, kernel2), data...; kwargs...)
-
 function AsymptoticSKCETest(kernel::Kernel, data...)
     # obtain the predictions and targets
     predictions, targets = CalibrationErrors.predictions_targets(data...)

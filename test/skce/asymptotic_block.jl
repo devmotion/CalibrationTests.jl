@@ -16,7 +16,9 @@ Random.seed!(1234)
             blocksize < nsamples || continue
 
             # create estimator
-            skce = BlockUnbiasedSKCE(transform(ExponentialKernel(), 0.1), WhiteKernel(), blocksize)
+            skce = BlockUnbiasedSKCE(
+                transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel(), blocksize,
+            )
 
             # sample predictions and targets
             dist = Dirichlet(nclasses, 1)
@@ -60,8 +62,9 @@ end
 
     for blocksize in (2, 5, 10)
         # create block estimator
-        skce = BlockUnbiasedSKCE(transform(ExponentialKernel(), 0.1), WhiteKernel(),
-                                 blocksize)
+        skce = BlockUnbiasedSKCE(
+            transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel(), blocksize,
+        )
 
         for nclasses in (2, 10)
             dist = Dirichlet(nclasses, 1)

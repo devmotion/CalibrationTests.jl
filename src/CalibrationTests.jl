@@ -23,4 +23,6 @@ include("skce/asymptotic.jl")
 include("skce/asymptotic_block.jl")
 include("skce/distribution_free.jl")
 
+include("deprecated.jl")
+
 end # module
