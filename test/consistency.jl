@@ -69,8 +69,9 @@ end
     N = 1_000
 
     for blocksize in (2, 5)
-        ce = BlockUnbiasedSKCE(transform(ExponentialKernel(), 0.1), WhiteKernel(),
-                               blocksize)
+        ce = BlockUnbiasedSKCE(
+            transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel(), blocksize,
+        )
 
         for nclasses in (2, 5, 10)
             println("Consistency test with the linear SKCE estimator ($nclasses classes)")

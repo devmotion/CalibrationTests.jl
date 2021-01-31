@@ -22,7 +22,7 @@ end
 const data_consistent, data_only_two = generate_binary_data(500)
 
 # define tensor product kernel (using the mean total variation distance as bandwidth)
-const kernel = TensorProduct(transform(ExponentialKernel(), 3), WhiteKernel())
+const kernel = transform(ExponentialKernel(), 3) ⊗ WhiteKernel()
 
 @testset "Consistency test" begin
     # define estimators

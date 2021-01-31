@@ -9,7 +9,7 @@ using Test
 Random.seed!(1234)
 
 @testset "estimate and statistic" begin
-    kernel = TensorProduct(transform(ExponentialKernel(), 0.1), WhiteKernel())
+    kernel = transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel()
     biasedskce = BiasedSKCE(kernel)
     unbiasedskce = UnbiasedSKCE(kernel)
 
@@ -31,7 +31,10 @@ Random.seed!(1234)
 end
 
 @testset "consistency" begin
-    skce = UnbiasedSKCE(transform(ExponentialKernel(), 0.1), WhiteKernel())
+    kernel1 = transform(ExponentialKernel(), 0.1)
+    kernel2 = WhiteKernel()
+    kernel = kernel1 ⊗ kernel2
+    skce = UnbiasedSKCE(kernel)
     αs = 0.05:0.1:0.95
     nsamples = 100
 
@@ -58,6 +61,20 @@ end
             # estimate pvalues
             pvalues_consistent[i] = pvalue(test_consistent; bootstrap_iters = 200)
             pvalues_onlyone[i] = pvalue(test_onlyone; bootstrap_iters = 200)
+
+            # deprecations
+            for (targets, test) in (
+                (targets_consistent, test_consistent), (targets_onlyone, test_onlyone)
+            )
+                test2 = @test_deprecated AsymptoticSKCETest(
+                    kernel1, kernel2, predictions, targets,
+                )
+                @test test2.kernel == test.kernel
+                @test test2.predictions == test.predictions
+                @test test2.targets == test.targets
+                @test test2.estimate == test.estimate
+                @test test2.statistic == test.statistic
+            end
         end
 
         # compute empirical test errors

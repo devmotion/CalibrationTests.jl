@@ -70,4 +70,4 @@ uniformbound(kernel::ScaledKernel) = first(kernel.σ²) * uniformbound(kernel.ke
 uniformbound(kernel::TransformedKernel) = uniformbound(kernel.kernel)
 
 # uniform bounds of the norm of tensor product kernels
-uniformbound(kernel::TensorProduct) = prod(uniformbound, kernel.kernels)
+uniformbound(kernel::KernelTensorProduct) = prod(uniformbound, kernel.kernels)
