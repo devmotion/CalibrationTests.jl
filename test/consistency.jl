@@ -101,8 +101,9 @@ end
             ]
 
             Random.seed!(5678)
-            pvalues_alias = [resample_alias(Random.GLOBAL_RNG, test_consistent) for _ in 1:N
-]
+            pvalues_alias = [
+                resample_alias(Random.GLOBAL_RNG, test_consistent) for _ in 1:N
+            ]
 
             if blocksize == 2
                 if nclasses == 2

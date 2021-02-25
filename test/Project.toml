@@ -12,7 +12,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [compat]
 CalibrationErrors = "0.5.12"
 Distributions = "0.23, 0.24"
-JuliaFormatter = "0.12.3"
+JuliaFormatter = "0.13"
 SafeTestsets = "0.0"
 StatsBase = "0.33"
 StatsFuns = "0.9"
