@@ -22,10 +22,15 @@ Random.seed!(1234)
 
         # compute calibration error estimate and test statistic
         for targets in (targets_consistent, targets_onlyone)
-            estimate, statistic = CalibrationTests.estimate_statistic(kernel, predictions, targets)
+            estimate, statistic = CalibrationTests.estimate_statistic(
+                kernel, predictions, targets
+            )
 
             @test estimate ≈ calibrationerror(unbiasedskce, predictions, targets)
-            @test statistic ≈ nsamples / (nsamples - 1) * calibrationerror(unbiasedskce, predictions, targets) - calibrationerror(biasedskce, predictions, targets)
+            @test statistic ≈
+                  nsamples / (nsamples - 1) *
+                  calibrationerror(unbiasedskce, predictions, targets) -
+                  calibrationerror(biasedskce, predictions, targets)
         end
     end
 end
@@ -59,15 +64,14 @@ end
             test_onlyone = AsymptoticSKCETest(skce, predictions, targets_onlyone)
 
             # estimate pvalues
-            pvalues_consistent[i] = pvalue(test_consistent; bootstrap_iters = 200)
-            pvalues_onlyone[i] = pvalue(test_onlyone; bootstrap_iters = 200)
+            pvalues_consistent[i] = pvalue(test_consistent; bootstrap_iters=200)
+            pvalues_onlyone[i] = pvalue(test_onlyone; bootstrap_iters=200)
 
             # deprecations
-            for (targets, test) in (
-                (targets_consistent, test_consistent), (targets_onlyone, test_onlyone)
-            )
+            for (targets, test) in
+                ((targets_consistent, test_consistent), (targets_onlyone, test_onlyone))
                 test2 = @test_deprecated AsymptoticSKCETest(
-                    kernel1, kernel2, predictions, targets,
+                    kernel1, kernel2, predictions, targets
                 )
                 @test test2.kernel == test.kernel
                 @test test2.predictions == test.predictions

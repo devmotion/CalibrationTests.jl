@@ -6,6 +6,7 @@ Hypothesis tests of calibration.
 [![DOI](https://zenodo.org/badge/215970266.svg)](https://zenodo.org/badge/latestdoi/215970266)
 [![Codecov](https://codecov.io/gh/devmotion/CalibrationTests.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/devmotion/CalibrationTests.jl)
 [![Coveralls](https://coveralls.io/repos/github/devmotion/CalibrationTests.jl/badge.svg?branch=master)](https://coveralls.io/github/devmotion/CalibrationTests.jl?branch=master)
+[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 [![Bors enabled](https://bors.tech/images/badge_small.svg)](https://app.bors.tech/repositories/24613)
 
 ## Overview

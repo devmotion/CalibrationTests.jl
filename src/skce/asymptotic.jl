@@ -11,8 +11,9 @@ struct AsymptoticSKCETest{K<:Kernel,P,T,E,V} <: HypothesisTests.HypothesisTest
     statistic::V
 end
 
-AsymptoticSKCETest(skce::UnbiasedSKCE, data...; kwargs...) =
-    AsymptoticSKCETest(skce.kernel, data...; kwargs...)
+function AsymptoticSKCETest(skce::UnbiasedSKCE, data...; kwargs...)
+    return AsymptoticSKCETest(skce.kernel, data...; kwargs...)
+end
 
 function AsymptoticSKCETest(kernel::Kernel, data...)
     # obtain the predictions and targets
@@ -21,42 +22,44 @@ function AsymptoticSKCETest(kernel::Kernel, data...)
     # compute the calibration error estimate and the test statistic
     estimate, statistic = estimate_statistic(kernel, predictions, targets)
 
-    AsymptoticSKCETest(kernel, predictions, targets, estimate, statistic)
+    return AsymptoticSKCETest(kernel, predictions, targets, estimate, statistic)
 end
 
 # HypothesisTests interface
 
 HypothesisTests.default_tail(::AsymptoticSKCETest) = :right
 
-HypothesisTests.pvalue(test::AsymptoticSKCETest; kwargs...) =
-    pvalue(Random.GLOBAL_RNG, test; kwargs...)
-function HypothesisTests.pvalue(rng::AbstractRNG, test::AsymptoticSKCETest;
-                                bootstrap_iters::Int = 1_000)
-    bootstrap_ccdf(rng, test, bootstrap_iters)
+function HypothesisTests.pvalue(test::AsymptoticSKCETest; kwargs...)
+    return pvalue(Random.GLOBAL_RNG, test; kwargs...)
+end
+function HypothesisTests.pvalue(
+    rng::AbstractRNG, test::AsymptoticSKCETest; bootstrap_iters::Int=1_000
+)
+    return bootstrap_ccdf(rng, test, bootstrap_iters)
 end
 
 HypothesisTests.testname(::AsymptoticSKCETest) = "Asymptotic SKCE test"
 
 # parameter of interest: name, value under H0, point estimate
 function HypothesisTests.population_param_of_interest(test::AsymptoticSKCETest)
-    "SKCE", zero(test.estimate), test.estimate
+    return "SKCE", zero(test.estimate), test.estimate
 end
 
-function HypothesisTests.show_params(io::IO, test::AsymptoticSKCETest, ident = "")
-    println(io, ident, "test statistic: $(test.statistic)")
+function HypothesisTests.show_params(io::IO, test::AsymptoticSKCETest, ident="")
+    return println(io, ident, "test statistic: $(test.statistic)")
 end
 
 # compute the unbiased estimate of the SKCE and the test statistic
 # `nsamples / (nsamples - 1) * SKCEuq - SKCEb`.
-function estimate_statistic(kernel::Kernel,
-                            predictions::AbstractVector,
-                            targets::AbstractVector)
+function estimate_statistic(
+    kernel::Kernel, predictions::AbstractVector, targets::AbstractVector
+)
     # obtain number of samples
     nsamples = length(predictions)
     nsamples > 1 || error("there must be at least two samples")
 
     # pre-computations
-    α = (2 * nsamples  - 1) / (nsamples - 1)^2
+    α = (2 * nsamples - 1) / (nsamples - 1)^2
 
     @inbounds begin
         # evaluate the kernel function for the first pair of samples
@@ -79,7 +82,9 @@ function estimate_statistic(kernel::Kernel,
                 targetj = targets[j]
 
                 # evaluate the kernel function
-                result = unsafe_skce_eval(kernel, predictioni, targeti, predictionj, targetj)
+                result = unsafe_skce_eval(
+                    kernel, predictioni, targeti, predictionj, targetj
+                )
 
                 # update the estimate and the test statistic
                 nstatistic += 2
@@ -95,12 +100,11 @@ function estimate_statistic(kernel::Kernel,
         end
     end
 
-    estimate, statistic
+    return estimate, statistic
 end
 
 # estimate the ccdf using bootstrapping
-function bootstrap_ccdf(rng::AbstractRNG, test::AsymptoticSKCETest,
-                        bootstrap_iters::Int)
+function bootstrap_ccdf(rng::AbstractRNG, test::AsymptoticSKCETest, bootstrap_iters::Int)
     @unpack kernel, predictions, targets, statistic = test
 
     # initialize array of resampled indices
@@ -128,8 +132,9 @@ function bootstrap_ccdf(rng::AbstractRNG, test::AsymptoticSKCETest,
                 idxj = resampledidxs[j]
 
                 # evaluate the kernel function
-                result = unsafe_skce_eval(kernel, predictioni, targeti, predictions[idxj],
-                                          targets[idxj])
+                result = unsafe_skce_eval(
+                    kernel, predictioni, targeti, predictions[idxj], targets[idxj]
+                )
 
                 # update the running mean
                 nij += 1
@@ -139,8 +144,9 @@ function bootstrap_ccdf(rng::AbstractRNG, test::AsymptoticSKCETest,
             # evaluate combinations of bootstrapped samples and original samples
             @inbounds for k in 1:nsamples
                 # evaluate the kernel function
-                result = unsafe_skce_eval(kernel, predictioni, targeti, predictions[k],
-                                          targets[k])
+                result = unsafe_skce_eval(
+                    kernel, predictioni, targeti, predictions[k], targets[k]
+                )
 
                 # update the running mean
                 nik += 1
@@ -154,5 +160,5 @@ function bootstrap_ccdf(rng::AbstractRNG, test::AsymptoticSKCETest,
         end
     end
 
-    extreme_count / bootstrap_iters
+    return extreme_count / bootstrap_iters
 end

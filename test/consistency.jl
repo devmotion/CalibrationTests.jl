@@ -6,10 +6,12 @@ using Random
 using Statistics
 using Test
 
-resample_direct(rng, test) =
-    CalibrationTests.consistency_resampling_ccdf_direct(rng, test, 1_000)
-resample_alias(rng, test) =
-    CalibrationTests.consistency_resampling_ccdf_alias(rng, test, 1_000)
+function resample_direct(rng, test)
+    return CalibrationTests.consistency_resampling_ccdf_direct(rng, test, 1_000)
+end
+function resample_alias(rng, test)
+    return CalibrationTests.consistency_resampling_ccdf_alias(rng, test, 1_000)
+end
 
 @testset "ECE" begin
     ce = ECE(UniformBinning(10))
@@ -70,7 +72,7 @@ end
 
     for blocksize in (2, 5)
         ce = BlockUnbiasedSKCE(
-            transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel(), blocksize,
+            transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel(), blocksize
         )
 
         for nclasses in (2, 5, 10)
@@ -80,8 +82,9 @@ end
             Random.seed!(1234)
             dist = Dirichlet(nclasses, 1)
             predictions = [rand(dist) for _ in 1:10]
-            targets_consistent = [rand(Categorical(prediction)) for prediction in
-                                  predictions]
+            targets_consistent = [
+                rand(Categorical(prediction)) for prediction in predictions
+            ]
             targets_onlyone = ones(Int, length(predictions))
 
             # define consistency resampling tests
@@ -93,12 +96,13 @@ end
             pvalues = [pvalue(Random.GLOBAL_RNG, test_consistent) for _ in 1:N]
 
             Random.seed!(1111)
-            pvalues_direct = [resample_direct(Random.GLOBAL_RNG, test_consistent) for _ in
-                              1:N]
+            pvalues_direct = [
+                resample_direct(Random.GLOBAL_RNG, test_consistent) for _ in 1:N
+            ]
 
             Random.seed!(5678)
-            pvalues_alias = [resample_alias(Random.GLOBAL_RNG, test_consistent) for _ in
-                             1:N]
+            pvalues_alias = [resample_alias(Random.GLOBAL_RNG, test_consistent) for _ in 1:N
+]
 
             if blocksize == 2
                 if nclasses == 2

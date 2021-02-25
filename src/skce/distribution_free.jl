@@ -9,14 +9,14 @@ struct DistributionFreeSKCETest{E<:SKCE,B,V} <: HypothesisTests.HypothesisTest
     estimate::V
 end
 
-function DistributionFreeSKCETest(estimator::SKCE, data...; bound = uniformbound(estimator))
+function DistributionFreeSKCETest(estimator::SKCE, data...; bound=uniformbound(estimator))
     # obtain the predictions and targets
     predictions, targets = CalibrationErrors.predictions_targets(data...)
 
     # compute the calibration error estimate
     estimate = calibrationerror(estimator, predictions, targets)
 
-    DistributionFreeSKCETest(estimator, bound, length(predictions), estimate)
+    return DistributionFreeSKCETest(estimator, bound, length(predictions), estimate)
 end
 
 # HypothesisTests interface
@@ -31,26 +31,27 @@ function HypothesisTests.pvalue(test::DistributionFreeSKCETest{<:BiasedSKCE})
     # if estimate is below threshold B₂
     s < zero(s) && (s = zero(s))
 
-    exp(- s^2 / 2)
+    return exp(-s^2 / 2)
 end
 
-function HypothesisTests.pvalue(test::DistributionFreeSKCETest{<:Union{UnbiasedSKCE,
-                                                                       BlockUnbiasedSKCE}})
+function HypothesisTests.pvalue(
+    test::DistributionFreeSKCETest{<:Union{UnbiasedSKCE,BlockUnbiasedSKCE}}
+)
     @unpack bound, n, estimate = test
 
-    exp(- div(n, 2) * estimate^2 / (2 * bound ^ 2))
+    return exp(-div(n, 2) * estimate^2 / (2 * bound^2))
 end
 
 HypothesisTests.testname(::DistributionFreeSKCETest) = "Distribution-free SKCE test"
 
 # parameter of interest: name, value under H0, point estimate
 function HypothesisTests.population_param_of_interest(test::DistributionFreeSKCETest)
-    nameof(typeof(test.estimator)), zero(test.estimate), test.estimate
+    return nameof(typeof(test.estimator)), zero(test.estimate), test.estimate
 end
 
-function HypothesisTests.show_params(io::IO, test::DistributionFreeSKCETest, ident = "")
+function HypothesisTests.show_params(io::IO, test::DistributionFreeSKCETest, ident="")
     println(io, ident, "number of observations: $(test.n)")
-    println(io, ident, "uniform bound of the terms of the estimator: $(test.bound)")
+    return println(io, ident, "uniform bound of the terms of the estimator: $(test.bound)")
 end
 
 # uniform bound `B_{p;q}` of the absolute value of the terms in the estimators

@@ -39,7 +39,9 @@ end
             # sample predictions and targets
             dist = Dirichlet(nclasses, 1)
             predictions = [rand(dist) for _ in 1:nsamples]
-            targets_consistent = [rand(Categorical(prediction)) for prediction in predictions]
+            targets_consistent = [
+                rand(Categorical(prediction)) for prediction in predictions
+            ]
             targets_onlyone = ones(Int, length(predictions))
 
             # for both sets of targets
@@ -76,8 +78,9 @@ end
                 end
 
                 # define test
-                test_consistent = DistributionFreeSKCETest(skce, predictions,
-                                                           targets_consistent)
+                test_consistent = DistributionFreeSKCETest(
+                    skce, predictions, targets_consistent
+                )
 
                 # estimate pvalue
                 pvalues_consistent[i] = pvalue(test_consistent)
