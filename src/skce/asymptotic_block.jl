@@ -17,11 +17,7 @@ function AsymptoticBlockSKCETest(skce::BlockUnbiasedSKCE, data...)
     return AsymptoticBlockSKCETest(skce.kernel, skce.blocksize, data...)
 end
 
-function AsymptoticBlockSKCETest(
-    κpredictions::Kernel,
-    κtargets::Kernel,
-    args...
-)
+function AsymptoticBlockSKCETest(κpredictions::Kernel, κtargets::Kernel, args...)
     return AsymptoticBlockSKCETest(TensorProduct(κpredictions, κtargets), args...)
 end
 
@@ -40,7 +36,9 @@ function AsymptoticBlockSKCETest(kernel::Kernel, blocksize::Int, data...)
     # evaluate U-statistic of the first block
     istart = 1
     iend = blocksize
-    x = CalibrationErrors.unbiasedskce(kernel, view(predictions, istart:iend), view(targets, istart:iend))
+    x = CalibrationErrors.unbiasedskce(
+        kernel, view(predictions, istart:iend), view(targets, istart:iend)
+    )
 
     # initialize the estimate and the sum of squares
     estimate = x / 1
@@ -51,7 +49,9 @@ function AsymptoticBlockSKCETest(kernel::Kernel, blocksize::Int, data...)
         # evaluate U-statistic
         istart += blocksize
         iend += blocksize
-        x = CalibrationErrors.unbiasedskce(kernel, view(predictions, istart:iend), view(targets, istart:iend))
+        x = CalibrationErrors.unbiasedskce(
+            kernel, view(predictions, istart:iend), view(targets, istart:iend)
+        )
 
         # update the estimate
         Δestimate = x - estimate
@@ -73,7 +73,7 @@ HypothesisTests.default_tail(::AsymptoticBlockSKCETest) = :right
 ## have to specify and check keyword arguments in `pvalue` and `confint` to
 ## force `tail = :right` due to the default implementation in HypothesisTests
 
-function HypothesisTests.pvalue(test::AsymptoticBlockSKCETest; tail = :right)
+function HypothesisTests.pvalue(test::AsymptoticBlockSKCETest; tail=:right)
     if tail === :right
         normccdf(test.z)
     else
@@ -82,7 +82,7 @@ function HypothesisTests.pvalue(test::AsymptoticBlockSKCETest; tail = :right)
 end
 
 # confidence interval by inversion
-function StatsBase.confint(test::AsymptoticBlockSKCETest; level = 0.95, tail = :right)
+function StatsBase.confint(test::AsymptoticBlockSKCETest; level=0.95, tail=:right)
     HypothesisTests.check_level(level)
 
     if tail === :right
@@ -98,13 +98,14 @@ HypothesisTests.testname(test::AsymptoticBlockSKCETest) = "Asymptotic block SKCE
 
 # parameter of interest: name, value under H0, point estimate
 function HypothesisTests.population_param_of_interest(test::AsymptoticBlockSKCETest)
-    "SKCE", zero(test.estimate), test.estimate
+    return "SKCE", zero(test.estimate), test.estimate
 end
 
-function HypothesisTests.show_params(io::IO, test::AsymptoticBlockSKCETest, ident = "")
+function HypothesisTests.show_params(io::IO, test::AsymptoticBlockSKCETest, ident="")
     println(io, ident, "number of observations per block: ", test.blocksize)
     println(io, ident, "number of blocks of observations: ", test.nblocks)
     println(io, ident, "z-statistic: ", test.z)
-    println(io, ident, "standard error of evaluations of pairs of observations: ",
-            test.stderr)
+    return println(
+        io, ident, "standard error of evaluations of pairs of observations: ", test.stderr
+    )
 end

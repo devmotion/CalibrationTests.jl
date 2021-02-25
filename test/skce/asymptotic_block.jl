@@ -17,14 +17,15 @@ Random.seed!(1234)
 
             # create estimator
             skce = BlockUnbiasedSKCE(
-                transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel(), blocksize,
+                transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel(), blocksize
             )
 
             # sample predictions and targets
             dist = Dirichlet(nclasses, 1)
             predictions = [rand(dist) for _ in 1:nsamples]
-            targets_consistent = [rand(Categorical(prediction)) for prediction in
-                                  predictions]
+            targets_consistent = [
+                rand(Categorical(prediction)) for prediction in predictions
+            ]
             targets_onlyone = ones(Int, length(predictions))
 
             # for both sets of targets
@@ -36,17 +37,17 @@ Random.seed!(1234)
                 @test test.estimate ≈ calibrationerror(skce, predictions, targets)
                 @test test.z == test.estimate / test.stderr
 
-                @test pvalue(test) == pvalue(test; tail = :right) == normccdf(test.z)
-                @test_throws ArgumentError pvalue(test; tail = :left)
-                @test_throws ArgumentError pvalue(test; tail = :both)
+                @test pvalue(test) == pvalue(test; tail=:right) == normccdf(test.z)
+                @test_throws ArgumentError pvalue(test; tail=:left)
+                @test_throws ArgumentError pvalue(test; tail=:both)
 
                 for α in 0.55:0.05:0.95
                     q = norminvcdf(α)
-                    @test confint(test; level = α) ==
-                        confint(test; level = α, tail = :right) ==
-                        (max(0, test.estimate - q * test.stderr), Inf)
-                    @test_throws ArgumentError confint(test; level = α, tail = :left)
-                    @test_throws ArgumentError confint(test; level = α, tail = :both)
+                    @test confint(test; level=α) ==
+                          confint(test; level=α, tail=:right) ==
+                          (max(0, test.estimate - q * test.stderr), Inf)
+                    @test_throws ArgumentError confint(test; level=α, tail=:left)
+                    @test_throws ArgumentError confint(test; level=α, tail=:both)
                 end
             end
         end
@@ -63,7 +64,7 @@ end
     for blocksize in (2, 5, 10)
         # create block estimator
         skce = BlockUnbiasedSKCE(
-            transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel(), blocksize,
+            transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel(), blocksize
         )
 
         for nclasses in (2, 10)
@@ -80,7 +81,9 @@ end
                 end
 
                 # define test
-                test_consistent = AsymptoticBlockSKCETest(skce, predictions, targets_consistent)
+                test_consistent = AsymptoticBlockSKCETest(
+                    skce, predictions, targets_consistent
+                )
                 test_onlyone = AsymptoticBlockSKCETest(skce, predictions, targets_onlyone)
 
                 # estimate pvalues

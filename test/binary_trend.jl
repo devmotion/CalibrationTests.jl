@@ -17,7 +17,7 @@ function generate_binary_data(nsamples)
     targets_consistent = [rand() < predictions[i][1] ? 1 : 2 for i in 1:nsamples]
     targets_onlytwo = fill(2, nsamples)
 
-    (predictions, targets_consistent), (predictions, targets_onlytwo)
+    return (predictions, targets_consistent), (predictions, targets_onlytwo)
 end
 const data_consistent, data_only_two = generate_binary_data(500)
 
@@ -26,8 +26,11 @@ const kernel = transform(ExponentialKernel(), 3) ⊗ WhiteKernel()
 
 @testset "Consistency test" begin
     # define estimators
-    estimators = (BiasedSKCE(kernel), UnbiasedSKCE(kernel),
-                  (BlockUnbiasedSKCE(kernel, b) for b in (2, 10, 50, 100))...)
+    estimators = (
+        BiasedSKCE(kernel),
+        UnbiasedSKCE(kernel),
+        (BlockUnbiasedSKCE(kernel, b) for b in (2, 10, 50, 100))...,
+    )
 
     for estimator in estimators
         test_consistent = ConsistencyTest(estimator, data_consistent)
@@ -42,8 +45,11 @@ end
 
 @testset "Distribution-free tests" begin
     # define estimators
-    estimators = (BiasedSKCE(kernel), UnbiasedSKCE(kernel),
-                  (BlockUnbiasedSKCE(kernel, b) for b in (2, 10, 50, 100))...)
+    estimators = (
+        BiasedSKCE(kernel),
+        UnbiasedSKCE(kernel),
+        (BlockUnbiasedSKCE(kernel, b) for b in (2, 10, 50, 100))...,
+    )
 
     for estimator in estimators
         test_consistent = DistributionFreeSKCETest(estimator, data_consistent)

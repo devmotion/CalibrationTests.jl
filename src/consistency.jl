@@ -16,7 +16,7 @@ function ConsistencyTest(estimator::CalibrationErrorEstimator, data...)
     # compute the calibration error estimate
     estimate = calibrationerror(estimator, predictions, targets)
 
-    ConsistencyTest(estimator, predictions, targets, estimate)
+    return ConsistencyTest(estimator, predictions, targets, estimate)
 end
 
 # HypothesisTests interface
@@ -25,24 +25,27 @@ HypothesisTests.default_tail(::ConsistencyTest) = :right
 
 HypothesisTests.testname(::ConsistencyTest) = "Consistency resampling test"
 
-HypothesisTests.pvalue(test::ConsistencyTest; kwargs...) =
-    pvalue(Random.GLOBAL_RNG, test; kwargs...)
-function HypothesisTests.pvalue(rng::Random.AbstractRNG, test::ConsistencyTest;
-                                bootstrap_iters::Int = 1_000)
-    consistency_resampling_ccdf(rng, test, bootstrap_iters)
+function HypothesisTests.pvalue(test::ConsistencyTest; kwargs...)
+    return pvalue(Random.GLOBAL_RNG, test; kwargs...)
+end
+function HypothesisTests.pvalue(
+    rng::Random.AbstractRNG, test::ConsistencyTest; bootstrap_iters::Int=1_000
+)
+    return consistency_resampling_ccdf(rng, test, bootstrap_iters)
 end
 
 # parameter of interest: name, value under H0, point estimate
 function HypothesisTests.population_param_of_interest(test::ConsistencyTest)
-    nameof(typeof(test.estimator)), zero(test.estimate), test.estimate
+    return nameof(typeof(test.estimator)), zero(test.estimate), test.estimate
 end
 
-HypothesisTests.show_params(io::IO, test::ConsistencyTest, ident = "") = nothing
+HypothesisTests.show_params(io::IO, test::ConsistencyTest, ident="") = nothing
 
 # estimate ccdf using bootstrapping - move upstream?
 
-function consistency_resampling_ccdf(rng::AbstractRNG, test::ConsistencyTest,
-                                     bootstrap_iters::Int)
+function consistency_resampling_ccdf(
+    rng::AbstractRNG, test::ConsistencyTest, bootstrap_iters::Int
+)
     @unpack predictions = test
     bootstrap_iters > 0 || error("number of bootstrap samples must be positive")
 
@@ -61,12 +64,13 @@ function consistency_resampling_ccdf(rng::AbstractRNG, test::ConsistencyTest,
         end
     end
 
-    p
+    return p
 end
 
 # sample targets directly (without alias table)
-function consistency_resampling_ccdf_direct(rng::AbstractRNG, test::ConsistencyTest,
-                                            bootstrap_iters::Int)
+function consistency_resampling_ccdf_direct(
+    rng::AbstractRNG, test::ConsistencyTest, bootstrap_iters::Int
+)
     @unpack estimator, predictions, targets, estimate = test
 
     # create caches
@@ -97,8 +101,9 @@ function consistency_resampling_ccdf_direct(rng::AbstractRNG, test::ConsistencyT
         end
 
         # evaluate the calibration error
-        resampledestimate = calibrationerror(estimator, resampledpredictions,
-                                             resampledtargets)
+        resampledestimate = calibrationerror(
+            estimator, resampledpredictions, resampledtargets
+        )
 
         # check if the estimate for the resampled data is ≥ the original estimate
         if resampledestimate ≥ estimate
@@ -106,12 +111,13 @@ function consistency_resampling_ccdf_direct(rng::AbstractRNG, test::ConsistencyT
         end
     end
 
-    n / bootstrap_iters
+    return n / bootstrap_iters
 end
 
 # sample targets with an alias table
-function consistency_resampling_ccdf_alias(rng::AbstractRNG, test::ConsistencyTest,
-                                           bootstrap_iters::Int)
+function consistency_resampling_ccdf_alias(
+    rng::AbstractRNG, test::ConsistencyTest, bootstrap_iters::Int
+)
     @unpack estimator, predictions, targets, estimate = test
 
     # create alias table
@@ -140,12 +146,14 @@ function consistency_resampling_ccdf_alias(rng::AbstractRNG, test::ConsistencyTe
 
             # resample targets
             target = rand(rng, 1:nclasses)
-            resampledtargets[j] = rand(rng) < accept[idx][target] ? target : alias[idx][target]
+            resampledtargets[j] =
+                rand(rng) < accept[idx][target] ? target : alias[idx][target]
         end
 
         # evaluate the calibration error
-        resampledestimate = calibrationerror(estimator, resampledpredictions,
-                                              resampledtargets)
+        resampledestimate = calibrationerror(
+            estimator, resampledpredictions, resampledtargets
+        )
 
         # check if the estimate for the resampled data is ≥ the original estimate
         if resampledestimate ≥ estimate
@@ -153,5 +161,5 @@ function consistency_resampling_ccdf_alias(rng::AbstractRNG, test::ConsistencyTe
         end
     end
 
-    n / bootstrap_iters
+    return n / bootstrap_iters
 end

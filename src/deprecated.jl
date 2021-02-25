@@ -1,3 +1,3 @@
-@deprecate AsymptoticSKCETest(
-    kernel1::Kernel, kernel2::Kernel, data...; kwargs...
-) AsymptoticSKCETest(kernel1 ⊗ kernel2, data...; kwargs...)
+@deprecate AsymptoticSKCETest(kernel1::Kernel, kernel2::Kernel, data...; kwargs...) AsymptoticSKCETest(
+    kernel1 ⊗ kernel2, data...; kwargs...
+)
