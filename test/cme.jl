@@ -46,7 +46,7 @@ Random.seed!(1234)
             # use of `inv` can lead to slightly different results
             S = cov(deviations; dims=1)
             statistic = nsamples * mean_deviations' * inv(S) * mean_deviations
-            @test test.statistic ≈ statistic rtol=1e-5
+            @test test.statistic ≈ statistic rtol = 1e-5
         end
     end
 end
