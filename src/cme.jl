@@ -73,19 +73,3 @@ function HypothesisTests.show_params(io::IO, test::AsymptoticCMETest, ident="")
     println(io, ident, "UCME estimate: ", test.estimate)
     return println(io, ident, "test statistic: ", test.statistic)
 end
-
-
-# confidence interval by inversion
-#=
-function StatsBase.confint(test::AsymptoticCMETest; level=0.95, tail=:right)
-    HypothesisTests.check_level(level)
-
-    if tail === :right
-        q = chisqinvcdf(test.ntestsamples, level)
-        lowerbound = test.statistic - q * test.stderr
-        (lowerbound, oftype(lowerbound, Inf))
-    else
-        throw(ArgumentError("tail = $(tail) is invalid"))
-    end
-end
-=#
