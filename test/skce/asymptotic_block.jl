@@ -107,8 +107,9 @@ end
             end
 
             # compute empirical test errors
-            @test all(ecdf(pvalues_consistent)(α) ≤ α + 0.08 for α in αs)
-            @test all(iszero, 1 .- ecdf(pvalues_onlyone).(αs))
+            ecdf_consistent = ecdf(pvalues_consistent)
+            @test all(ecdf_consistent(α) ≤ α + 0.08 for α in αs)
+            @test all(p < 0.05 for p in pvalues_onlyone)
         end
     end
 end
