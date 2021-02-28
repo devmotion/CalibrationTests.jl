@@ -17,10 +17,6 @@ function AsymptoticBlockSKCETest(skce::BlockUnbiasedSKCE, data...)
     return AsymptoticBlockSKCETest(skce.kernel, skce.blocksize, data...)
 end
 
-function AsymptoticBlockSKCETest(κpredictions::Kernel, κtargets::Kernel, args...)
-    return AsymptoticBlockSKCETest(TensorProduct(κpredictions, κtargets), args...)
-end
-
 function AsymptoticBlockSKCETest(kernel::Kernel, blocksize::Int, data...)
     # obtain predictions and targets
     predictions, targets = CalibrationErrors.predictions_targets(data...)
