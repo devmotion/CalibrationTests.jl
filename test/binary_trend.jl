@@ -87,3 +87,18 @@ end
     @test pvalue(test_only_two) < 1e-6
     println(test_only_two)
 end
+
+@testset "Asymptotic CME test" begin
+    # define estimator (uniformly distributed test locations)
+    testpredictions = [rand(Dirichlet(2, 1)) for _ in 1:5]
+    testtargets = rand(1:2, 5)
+    estimator = UCME(kernel, testpredictions, testtargets)
+
+    test_consistent = AsymptoticCMETest(estimator, data_consistent)
+    @test pvalue(test_consistent) > 0.8
+    println(test_consistent)
+
+    test_only_two = AsymptoticCMETest(estimator, data_only_two)
+    @test pvalue(test_only_two) < 1e-6
+    println(test_only_two)
+end

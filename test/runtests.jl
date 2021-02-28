@@ -16,3 +16,7 @@ end
 @safetestset "Distribution-free tests" begin
     include("skce/distribution_free.jl")
 end
+
+@safetestset "Asymptotic CME test" begin
+    include("cme.jl")
+end
