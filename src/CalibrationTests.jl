@@ -1,7 +1,10 @@
 module CalibrationTests
 
-using CalibrationErrors
+using Reexport
+
+@reexport using CalibrationErrors
 using HypothesisTests
+@reexport using KernelFunctions
 using UnPack
 using StatsBase
 using StatsFuns
