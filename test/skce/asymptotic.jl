@@ -8,7 +8,7 @@ using Test
 
 Random.seed!(1234)
 
-@testset "estimate and statistic" begin
+@testset "estimate, statistic, and kernel matrix" begin
     kernel = transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel()
     biasedskce = BiasedSKCE(kernel)
     unbiasedskce = UnbiasedSKCE(kernel)
@@ -22,7 +22,7 @@ Random.seed!(1234)
 
         # compute calibration error estimate and test statistic
         for targets in (targets_consistent, targets_onlyone)
-            estimate, statistic = CalibrationTests.estimate_statistic(
+            estimate, statistic, kernelmatrix = CalibrationTests.estimate_statistic_kernelmatrix(
                 kernel, predictions, targets
             )
 
@@ -31,6 +31,14 @@ Random.seed!(1234)
                   nsamples / (nsamples - 1) *
                   calibrationerror(unbiasedskce, predictions, targets) -
                   calibrationerror(biasedskce, predictions, targets)
+            @test kernelmatrix ≈
+                  CalibrationErrors.unsafe_skce_eval.(
+                (kernel,),
+                predictions,
+                targets,
+                permutedims(predictions),
+                permutedims(targets),
+            )
         end
     end
 end
@@ -66,19 +74,6 @@ end
             # estimate pvalues
             pvalues_consistent[i] = pvalue(test_consistent; bootstrap_iters=200)
             pvalues_onlyone[i] = pvalue(test_onlyone; bootstrap_iters=200)
-
-            # deprecations
-            for (targets, test) in
-                ((targets_consistent, test_consistent), (targets_onlyone, test_onlyone))
-                test2 = @test_deprecated AsymptoticSKCETest(
-                    kernel1, kernel2, predictions, targets
-                )
-                @test test2.kernel == test.kernel
-                @test test2.predictions == test.predictions
-                @test test2.targets == test.targets
-                @test test2.estimate == test.estimate
-                @test test2.statistic == test.statistic
-            end
         end
 
         # compute empirical test errors

@@ -1,7 +1,10 @@
 module CalibrationTests
 
-using CalibrationErrors
+using Reexport
+
+@reexport using CalibrationErrors
 using HypothesisTests
+@reexport using KernelFunctions
 using UnPack
 using StatsBase
 using StatsFuns
@@ -26,7 +29,5 @@ include("skce/asymptotic_block.jl")
 include("skce/distribution_free.jl")
 
 include("cme.jl")
-
-include("deprecated.jl")
 
 end # module

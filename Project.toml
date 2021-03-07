@@ -1,13 +1,15 @@
 name = "CalibrationTests"
 uuid = "2818745e-0823-50c7-bc2d-405ac343d48b"
 authors = ["David Widmann <david.widmann@it.uu.se>"]
-version = "0.4.4"
+version = "0.5.0"
 
 [deps]
 CalibrationErrors = "33913031-fe46-5864-950f-100836f47845"
 HypothesisTests = "09f84164-cd44-5f33-b23f-e6b0d136a0d5"
+KernelFunctions = "ec8451be-7e33-11e9-00cf-bbf324bd1392"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StatsFuns = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
@@ -16,6 +18,8 @@ UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 [compat]
 CalibrationErrors = "0.5.12"
 HypothesisTests = "0.8, 0.9, 0.10"
+KernelFunctions = "0.8.20"
+Reexport = "1"
 StatsBase = "0.32, 0.33"
 StatsFuns = "0.8, 0.9"
 UnPack = "0.1, 1"

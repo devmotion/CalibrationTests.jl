@@ -81,9 +81,10 @@ function consistency_resampling_ccdf_direct(
 
     # for each resampling step
     n = 0
+    sampler = Random.Sampler(rng, 1:nsamples)
     @inbounds for _ in 1:bootstrap_iters
         # resample data
-        rand!(rng, resampledidxs, 1:nsamples)
+        rand!(rng, resampledidxs, sampler)
         for j in 1:nsamples
             # resample predictions
             idx = resampledidxs[j]
@@ -136,16 +137,18 @@ function consistency_resampling_ccdf_alias(
 
     # for each resampling step
     n = 0
+    sampler_predictions = Random.Sampler(rng, 1:nsamples)
+    sampler_targets = Random.Sampler(rng, 1:nclasses)
     @inbounds for _ in 1:bootstrap_iters
         # resample data
-        rand!(rng, resampledidxs, 1:nsamples)
+        rand!(rng, resampledidxs, sampler_predictions)
         for j in 1:nsamples
             # resample predictions
             idx = resampledidxs[j]
             resampledpredictions[j] = predictions[idx]
 
             # resample targets
-            target = rand(rng, 1:nclasses)
+            target = rand(rng, sampler_targets)
             resampledtargets[j] =
                 rand(rng) < accept[idx][target] ? target : alias[idx][target]
         end

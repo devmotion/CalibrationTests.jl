@@ -90,20 +90,6 @@ end
                 # estimate pvalues
                 pvalues_consistent[i] = pvalue(test_consistent)
                 pvalues_onlyone[i] = pvalue(test_onlyone)
-
-                # deprecations
-                for (targets, test) in
-                    ((targets_consistent, test_consistent), (targets_onlyone, test_onlyone))
-                    test2 = @test_deprecated AsymptoticBlockSKCETest(
-                        kernel1, kernel2, blocksize, predictions, targets
-                    )
-                    @test test2.kernel == test.kernel
-                    @test test2.blocksize == test.blocksize
-                    @test test2.nblocks == test.nblocks
-                    @test test2.estimate == test.estimate
-                    @test test2.stderr == test.stderr
-                    @test test2.z == test.z
-                end
             end
 
             # compute empirical test errors
