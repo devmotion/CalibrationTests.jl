@@ -8,7 +8,7 @@ using Test
 
 Random.seed!(1234)
 
-@testset "estimate and statistic" begin
+@testset "estimate, statistic, and kernel matrix" begin
     kernel = transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel()
     biasedskce = BiasedSKCE(kernel)
     unbiasedskce = UnbiasedSKCE(kernel)
@@ -22,7 +22,7 @@ Random.seed!(1234)
 
         # compute calibration error estimate and test statistic
         for targets in (targets_consistent, targets_onlyone)
-            estimate, statistic = CalibrationTests.estimate_statistic(
+            estimate, statistic, kernelmatrix = CalibrationTests.estimate_statistic_kernelmatrix(
                 kernel, predictions, targets
             )
 
@@ -31,6 +31,14 @@ Random.seed!(1234)
                   nsamples / (nsamples - 1) *
                   calibrationerror(unbiasedskce, predictions, targets) -
                   calibrationerror(biasedskce, predictions, targets)
+            @test kernelmatrix ≈
+                  CalibrationErrors.unsafe_skce_eval.(
+                (kernel,),
+                predictions,
+                targets,
+                permutedims(predictions),
+                permutedims(targets),
+            )
         end
     end
 end
