@@ -18,7 +18,7 @@ UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 [compat]
 CalibrationErrors = "0.5.12"
 HypothesisTests = "0.8, 0.9, 0.10"
-KernelFunctions = "0.8.20"
+KernelFunctions = "0.8.20, 0.9"
 Reexport = "1"
 StatsBase = "0.32, 0.33"
 StatsFuns = "0.8, 0.9"
