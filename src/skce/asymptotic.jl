@@ -1,6 +1,5 @@
 @doc raw"""
-    AsymptoticSKCETest(kernel::Kernel, data...)
-    AsymptoticSKCETest(skce::UnbiasedSKCE, data...)
+    AsymptoticSKCETest(kernel::Kernel, predictions, targets)
 
 Calibration hypothesis test based on the unbiased estimator of the squared kernel
 calibration error (SKCE) with quadratic sample complexity.
