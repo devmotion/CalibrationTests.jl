@@ -1,22 +1,40 @@
-using SafeTestsets
+using CalibrationTests
+using CalibrationErrors
+using Distributions
+using StatsBase
 
-@safetestset "Binary trend tests" begin
-    include("binary_trend.jl")
-end
-@safetestset "Consistency test" begin
-    include("consistency.jl")
-end
+using Random
+using Statistics
+using Test
 
-@safetestset "Asymptotic test" begin
-    include("skce/asymptotic.jl")
-end
-@safetestset "Asymptotic block test" begin
-    include("skce/asymptotic_block.jl")
-end
-@safetestset "Distribution-free tests" begin
-    include("skce/distribution_free.jl")
-end
+Random.seed!(1234)
 
-@safetestset "Asymptotic CME test" begin
-    include("cme.jl")
+@testset "CalibrationTests" begin
+    @testset "Binary trend" begin
+        include("binary_trend.jl")
+    end
+
+    @testset "Consistency test" begin
+        include("consistency.jl")
+    end
+
+    @testset "SKCE" begin
+        @testset "Asymptotic" begin
+            include("skce/asymptotic.jl")
+        end
+        @testset "Asymptotic block" begin
+            include("skce/asymptotic_block.jl")
+        end
+        @testset "Distribution-free" begin
+            include("skce/distribution_free.jl")
+        end
+    end
+
+    @testset "Asymptotic CME" begin
+        include("cme.jl")
+    end
+
+    @testset "Deprecations" begin
+        include("deprecated.jl")
+    end
 end

@@ -9,13 +9,13 @@ struct DistributionFreeSKCETest{E<:SKCE,B,V} <: HypothesisTests.HypothesisTest
     estimate::V
 end
 
-function DistributionFreeSKCETest(estimator::SKCE, data...; bound=uniformbound(estimator))
-    # obtain the predictions and targets
-    predictions, targets = CalibrationErrors.predictions_targets(data...)
-
-    # compute the calibration error estimate
-    estimate = calibrationerror(estimator, predictions, targets)
-
+function DistributionFreeSKCETest(
+    estimator::SKCE,
+    predictions::AbstractVector,
+    targets::AbstractVector;
+    bound=uniformbound(estimator),
+)
+    estimate = estimator(predictions, targets)
     return DistributionFreeSKCETest(estimator, bound, length(predictions), estimate)
 end
 

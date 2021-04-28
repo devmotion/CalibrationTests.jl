@@ -13,14 +13,9 @@ struct AsymptoticBlockSKCETest{K<:Kernel,E,S,Z} <: HypothesisTests.ZTest
     z::Z
 end
 
-function AsymptoticBlockSKCETest(skce::BlockUnbiasedSKCE, data...)
-    return AsymptoticBlockSKCETest(skce.kernel, skce.blocksize, data...)
-end
-
-function AsymptoticBlockSKCETest(kernel::Kernel, blocksize::Int, data...)
-    # obtain predictions and targets
-    predictions, targets = CalibrationErrors.predictions_targets(data...)
-
+function AsymptoticBlockSKCETest(
+    kernel::Kernel, blocksize::Int, predictions::AbstractVector, targets::AbstractVector
+)
     # obtain number of samples
     nsamples = length(predictions)
     nsamples ≥ blocksize || error("there must be at least ", blocksize, " samples")
@@ -32,9 +27,7 @@ function AsymptoticBlockSKCETest(kernel::Kernel, blocksize::Int, data...)
     # evaluate U-statistic of the first block
     istart = 1
     iend = blocksize
-    x = CalibrationErrors.unbiasedskce(
-        kernel, view(predictions, istart:iend), view(targets, istart:iend)
-    )
+    x = UnbiasedSKCE(kernel)(view(predictions, istart:iend), view(targets, istart:iend))
 
     # initialize the estimate and the sum of squares
     estimate = x / 1
@@ -45,9 +38,7 @@ function AsymptoticBlockSKCETest(kernel::Kernel, blocksize::Int, data...)
         # evaluate U-statistic
         istart += blocksize
         iend += blocksize
-        x = CalibrationErrors.unbiasedskce(
-            kernel, view(predictions, istart:iend), view(targets, istart:iend)
-        )
+        x = UnbiasedSKCE(kernel)(view(predictions, istart:iend), view(targets, istart:iend))
 
         # update the estimate
         Δestimate = x - estimate

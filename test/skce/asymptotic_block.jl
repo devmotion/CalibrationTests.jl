@@ -1,101 +1,91 @@
-using CalibrationTests
-using CalibrationErrors
-using Distributions
-using StatsBase
-using StatsFuns
+@testset "asymptotic_block.jl" begin
+    @testset "estimate, stderr, and z" begin
+        kernel = (ExponentialKernel() ∘ ScaleTransform(0.1)) ⊗ WhiteKernel()
+        for nclasses in (2, 10, 100), nsamples in (10, 50, 100)
+            for blocksize in (2, 5, 10, 50)
+                # blocksize may no be greater than number of samples
+                blocksize < nsamples || continue
 
-using Random
-using Test
+                # sample predictions and targets
+                dist = Dirichlet(nclasses, 1)
+                predictions = [rand(dist) for _ in 1:nsamples]
+                targets_consistent = [
+                    rand(Categorical(prediction)) for prediction in predictions
+                ]
+                targets_onlyone = ones(Int, length(predictions))
 
-Random.seed!(1234)
+                skce = BlockUnbiasedSKCE(kernel, blocksize)
 
-@testset "estimate, stderr, and z" begin
-    for nclasses in (2, 10, 100), nsamples in (10, 50, 100)
-        for blocksize in (2, 5, 10, 50)
-            # blocksize may no be greater than number of samples
-            blocksize < nsamples || continue
+                # for both sets of targets
+                for targets in (targets_consistent, targets_onlyone)
+                    test = AsymptoticBlockSKCETest(kernel, blocksize, predictions, targets)
 
-            # create estimator
-            skce = BlockUnbiasedSKCE(
-                transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel(), blocksize
-            )
+                    @test test.blocksize == blocksize
+                    @test test.nblocks == nsamples ÷ blocksize
+                    @test test.estimate ≈ skce(predictions, targets)
+                    @test test.z == test.estimate / test.stderr
 
-            # sample predictions and targets
-            dist = Dirichlet(nclasses, 1)
-            predictions = [rand(dist) for _ in 1:nsamples]
-            targets_consistent = [
-                rand(Categorical(prediction)) for prediction in predictions
-            ]
-            targets_onlyone = ones(Int, length(predictions))
+                    @test pvalue(test) ==
+                          pvalue(test; tail=:right) ==
+                          ccdf(Normal(), test.z)
+                    @test_throws ArgumentError pvalue(test; tail=:left)
+                    @test_throws ArgumentError pvalue(test; tail=:both)
 
-            # for both sets of targets
-            for targets in (targets_consistent, targets_onlyone)
-                test = AsymptoticBlockSKCETest(skce, predictions, targets)
-
-                @test test.blocksize == blocksize
-                @test test.nblocks == nsamples ÷ blocksize
-                @test test.estimate ≈ calibrationerror(skce, predictions, targets)
-                @test test.z == test.estimate / test.stderr
-
-                @test pvalue(test) == pvalue(test; tail=:right) == normccdf(test.z)
-                @test_throws ArgumentError pvalue(test; tail=:left)
-                @test_throws ArgumentError pvalue(test; tail=:both)
-
-                for α in 0.55:0.05:0.95
-                    q = norminvcdf(α)
-                    @test confint(test; level=α) ==
-                          confint(test; level=α, tail=:right) ==
-                          (max(0, test.estimate - q * test.stderr), Inf)
-                    @test_throws ArgumentError confint(test; level=α, tail=:left)
-                    @test_throws ArgumentError confint(test; level=α, tail=:both)
+                    for α in 0.55:0.05:0.95
+                        q = quantile(Normal(), α)
+                        @test confint(test; level=α) ==
+                              confint(test; level=α, tail=:right) ==
+                              (max(0, test.estimate - q * test.stderr), Inf)
+                        @test_throws ArgumentError confint(test; level=α, tail=:left)
+                        @test_throws ArgumentError confint(test; level=α, tail=:both)
+                    end
                 end
             end
         end
     end
-end
 
-@testset "consistency" begin
-    kernel1 = transform(ExponentialKernel(), 0.1)
-    kernel2 = WhiteKernel()
-    kernel = kernel1 ⊗ kernel2
-    αs = 0.05:0.1:0.95
-    nsamples = 100
+    @testset "consistency" begin
+        kernel1 = ExponentialKernel() ∘ ScaleTransform(0.1)
+        kernel2 = WhiteKernel()
+        kernel = kernel1 ⊗ kernel2
+        αs = 0.05:0.1:0.95
+        nsamples = 100
 
-    pvalues_consistent = Vector{Float64}(undef, 100)
-    pvalues_onlyone = similar(pvalues_consistent)
+        pvalues_consistent = Vector{Float64}(undef, 100)
+        pvalues_onlyone = similar(pvalues_consistent)
 
-    for blocksize in (2, 5, 10)
-        # create block estimator
-        skce = BlockUnbiasedSKCE(kernel, blocksize)
+        for blocksize in (2, 5, 10)
+            for nclasses in (2, 10)
+                dist = Dirichlet(nclasses, 1)
+                predictions = [Vector{Float64}(undef, nclasses) for _ in 1:nsamples]
+                targets_consistent = Vector{Int}(undef, nsamples)
+                targets_onlyone = ones(Int, nsamples)
 
-        for nclasses in (2, 10)
-            dist = Dirichlet(nclasses, 1)
-            predictions = [Vector{Float64}(undef, nclasses) for _ in 1:nsamples]
-            targets_consistent = Vector{Int}(undef, nsamples)
-            targets_onlyone = ones(Int, nsamples)
+                for i in eachindex(pvalues_consistent)
+                    # sample predictions and targets
+                    for j in 1:nsamples
+                        rand!(dist, predictions[j])
+                        targets_consistent[j] = rand(Categorical(predictions[j]))
+                    end
 
-            for i in eachindex(pvalues_consistent)
-                # sample predictions and targets
-                for j in 1:nsamples
-                    rand!(dist, predictions[j])
-                    targets_consistent[j] = rand(Categorical(predictions[j]))
+                    # define test
+                    test_consistent = AsymptoticBlockSKCETest(
+                        kernel, blocksize, predictions, targets_consistent
+                    )
+                    test_onlyone = AsymptoticBlockSKCETest(
+                        kernel, blocksize, predictions, targets_onlyone
+                    )
+
+                    # estimate pvalues
+                    pvalues_consistent[i] = pvalue(test_consistent)
+                    pvalues_onlyone[i] = pvalue(test_onlyone)
                 end
 
-                # define test
-                test_consistent = AsymptoticBlockSKCETest(
-                    skce, predictions, targets_consistent
-                )
-                test_onlyone = AsymptoticBlockSKCETest(skce, predictions, targets_onlyone)
-
-                # estimate pvalues
-                pvalues_consistent[i] = pvalue(test_consistent)
-                pvalues_onlyone[i] = pvalue(test_onlyone)
+                # compute empirical test errors
+                ecdf_consistent = ecdf(pvalues_consistent)
+                @test all(ecdf_consistent(α) ≤ α + 0.1 for α in αs)
+                @test all(p < 0.05 for p in pvalues_onlyone)
             end
-
-            # compute empirical test errors
-            ecdf_consistent = ecdf(pvalues_consistent)
-            @test all(ecdf_consistent(α) ≤ α + 0.1 for α in αs)
-            @test all(p < 0.05 for p in pvalues_onlyone)
         end
     end
 end

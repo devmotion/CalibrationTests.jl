@@ -30,4 +30,6 @@ include("skce/distribution_free.jl")
 
 include("cme.jl")
 
+include("deprecated.jl")
+
 end # module
