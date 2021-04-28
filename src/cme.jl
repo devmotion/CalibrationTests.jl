@@ -13,11 +13,10 @@ struct AsymptoticCMETest{K<:Kernel,V,M,S} <: HypothesisTests.HypothesisTest
     statistic::S
 end
 
-function AsymptoticCMETest(estimator::UCME, data...)
+function AsymptoticCMETest(
+    estimator::UCME, predictions::AbstractVector, targets::AbstractVector
+)
     @unpack kernel, testpredictions, testtargets = estimator
-
-    # obtain predictions and targets
-    predictions, targets = CalibrationErrors.predictions_targets(data...)
 
     # determine number of observations and test locations
     nsamples = length(predictions)

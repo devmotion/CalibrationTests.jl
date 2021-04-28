@@ -1,6 +1,5 @@
 @doc raw"""
-    AsymptoticSKCETest(kernel::Kernel, data...)
-    AsymptoticSKCETest(skce::UnbiasedSKCE, data...)
+    AsymptoticSKCETest(kernel::Kernel, predictions, targets)
 
 Calibration hypothesis test based on the unbiased estimator of the squared kernel
 calibration error (SKCE) with quadratic sample complexity.
@@ -72,12 +71,9 @@ struct AsymptoticSKCETest{K<:Kernel,E,V,M} <: HypothesisTests.HypothesisTest
     kernelmatrix::M
 end
 
-AsymptoticSKCETest(skce::UnbiasedSKCE, data...) = AsymptoticSKCETest(skce.kernel, data...)
-
-function AsymptoticSKCETest(kernel::Kernel, data...)
-    # obtain the predictions and targets
-    predictions, targets = CalibrationErrors.predictions_targets(data...)
-
+function AsymptoticSKCETest(
+    kernel::Kernel, predictions::AbstractVector, targets::AbstractVector
+)
     # compute the calibration error estimate, the test statistic, and the kernel matrix
     estimate, statistic, kernelmatrix = estimate_statistic_kernelmatrix(
         kernel, predictions, targets

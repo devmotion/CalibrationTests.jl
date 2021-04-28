@@ -9,13 +9,12 @@ struct ConsistencyTest{E<:CalibrationErrorEstimator,P,T,V} <: HypothesisTests.Hy
     estimate::V
 end
 
-function ConsistencyTest(estimator::CalibrationErrorEstimator, data...)
-    # obtain the predictions and targets
-    predictions, targets = CalibrationErrors.predictions_targets(data...)
-
-    # compute the calibration error estimate
-    estimate = calibrationerror(estimator, predictions, targets)
-
+function ConsistencyTest(
+    estimator::CalibrationErrorEstimator,
+    predictions::AbstractVector,
+    targets::AbstractVector,
+)
+    estimate = estimator(predictions, targets)
     return ConsistencyTest(estimator, predictions, targets, estimate)
 end
 
@@ -102,9 +101,7 @@ function consistency_resampling_ccdf_direct(
         end
 
         # evaluate the calibration error
-        resampledestimate = calibrationerror(
-            estimator, resampledpredictions, resampledtargets
-        )
+        resampledestimate = estimator(resampledpredictions, resampledtargets)
 
         # check if the estimate for the resampled data is ≥ the original estimate
         if resampledestimate ≥ estimate
@@ -154,9 +151,7 @@ function consistency_resampling_ccdf_alias(
         end
 
         # evaluate the calibration error
-        resampledestimate = calibrationerror(
-            estimator, resampledpredictions, resampledtargets
-        )
+        resampledestimate = estimator(resampledpredictions, resampledtargets)
 
         # check if the estimate for the resampled data is ≥ the original estimate
         if resampledestimate ≥ estimate

@@ -1,94 +1,85 @@
-using CalibrationTests
-using CalibrationErrors
-using Distributions
-using StatsBase
-using StatsFuns
+@testset "distribution_free.jl" begin
+    @testset "bounds" begin
+        # default bounds for base kernels
+        CalibrationTests.uniformbound(ExponentialKernel()) == 1
+        CalibrationTests.uniformbound(SqExponentialKernel()) == 1
+        CalibrationTests.uniformbound(TVExponentialKernel()) == 1
+        CalibrationTests.uniformbound(WhiteKernel()) == 1
 
-using Random
-using Test
+        # default bounds for kernels with input transformations
+        CalibrationTests.uniformbound(SqExponentialKernel() ∘ ScaleTransform(rand())) == 1
+        CalibrationTests.uniformbound(TVExponentialKernel() ∘ ScaleTransform(rand(10))) == 1
 
-Random.seed!(1234)
+        # default bounds for scaled kernels
+        CalibrationTests.uniformbound(42 * ExponentialKernel()) == 42
 
-@testset "bounds" begin
-    # default bounds for base kernels
-    CalibrationTests.uniformbound(ExponentialKernel()) == 1
-    CalibrationTests.uniformbound(SqExponentialKernel()) == 1
-    CalibrationTests.uniformbound(TVExponentialKernel()) == 1
-    CalibrationTests.uniformbound(WhiteKernel()) == 1
+        # default bounds for tensor product kernels
+        kernel = (3.2 * SqExponentialKernel()) ⊗ (2.7 * WhiteKernel())
+        CalibrationTests.uniformbound(kernel) == 3.2 * 2.7
 
-    # default bounds for kernels with input transformations
-    CalibrationTests.uniformbound(transform(SqExponentialKernel(), rand())) == 1
-    CalibrationTests.uniformbound(transform(TVExponentialKernel(), rand(10))) == 1
+        # default bounds for kernel terms
+        CalibrationTests.uniformbound(BlockUnbiasedSKCE(kernel)) == 2 * 3.2 * 2.7
+    end
 
-    # default bounds for scaled kernels
-    CalibrationTests.uniformbound(42 * ExponentialKernel()) == 42
+    @testset "estimator and estimates" begin
+        kernel = (ExponentialKernel() ∘ ScaleTransform(0.1)) ⊗ WhiteKernel()
 
-    # default bounds for tensor product kernels
-    kernel = (3.2 * SqExponentialKernel()) ⊗ (2.7 * WhiteKernel())
-    CalibrationTests.uniformbound(kernel) == 3.2 * 2.7
+        for skce in (BiasedSKCE(kernel), UnbiasedSKCE(kernel), BlockUnbiasedSKCE(kernel))
+            for nclasses in (2, 10, 100), nsamples in (10, 50, 100)
+                # sample predictions and targets
+                dist = Dirichlet(nclasses, 1)
+                predictions = [rand(dist) for _ in 1:nsamples]
+                targets_consistent = [
+                    rand(Categorical(prediction)) for prediction in predictions
+                ]
+                targets_onlyone = ones(Int, length(predictions))
 
-    # default bounds for kernel terms
-    CalibrationTests.uniformbound(BlockUnbiasedSKCE(kernel)) == 2 * 3.2 * 2.7
-end
+                # for both sets of targets
+                for targets in (targets_consistent, targets_onlyone)
+                    test = DistributionFreeSKCETest(skce, predictions, targets)
 
-@testset "estimator and estimates" begin
-    kernel = transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel()
-
-    for skce in (BiasedSKCE(kernel), UnbiasedSKCE(kernel), BlockUnbiasedSKCE(kernel))
-        for nclasses in (2, 10, 100), nsamples in (10, 50, 100)
-            # sample predictions and targets
-            dist = Dirichlet(nclasses, 1)
-            predictions = [rand(dist) for _ in 1:nsamples]
-            targets_consistent = [
-                rand(Categorical(prediction)) for prediction in predictions
-            ]
-            targets_onlyone = ones(Int, length(predictions))
-
-            # for both sets of targets
-            for targets in (targets_consistent, targets_onlyone)
-                test = DistributionFreeSKCETest(skce, predictions, targets)
-
-                @test test.estimator == skce
-                @test test.n == nsamples
-                @test test.estimate ≈ calibrationerror(skce, predictions, targets)
-                @test test.bound == CalibrationTests.uniformbound(skce)
+                    @test test.estimator == skce
+                    @test test.n == nsamples
+                    @test test.estimate ≈ skce(predictions, targets)
+                    @test test.bound == CalibrationTests.uniformbound(skce)
+                end
             end
         end
     end
-end
 
-@testset "consistency" begin
-    kernel = transform(ExponentialKernel(), 0.1) ⊗ WhiteKernel()
-    αs = 0.05:0.1:0.95
-    nsamples = 100
+    @testset "consistency" begin
+        kernel = (ExponentialKernel() ∘ ScaleTransform(0.1)) ⊗ WhiteKernel()
+        αs = 0.05:0.1:0.95
+        nsamples = 100
 
-    pvalues_consistent = Vector{Float64}(undef, 100)
+        pvalues_consistent = Vector{Float64}(undef, 100)
 
-    for skce in (BiasedSKCE(kernel), UnbiasedSKCE(kernel), BlockUnbiasedSKCE(kernel))
-        for nclasses in (2, 10)
-            dist = Dirichlet(nclasses, 1)
-            predictions = [Vector{Float64}(undef, nclasses) for _ in 1:nsamples]
-            targets_consistent = Vector{Int}(undef, nsamples)
+        for skce in (BiasedSKCE(kernel), UnbiasedSKCE(kernel), BlockUnbiasedSKCE(kernel))
+            for nclasses in (2, 10)
+                dist = Dirichlet(nclasses, 1)
+                predictions = [Vector{Float64}(undef, nclasses) for _ in 1:nsamples]
+                targets_consistent = Vector{Int}(undef, nsamples)
 
-            for i in eachindex(pvalues_consistent)
-                # sample predictions and targets
-                for j in 1:nsamples
-                    rand!(dist, predictions[j])
-                    targets_consistent[j] = rand(Categorical(predictions[j]))
+                for i in eachindex(pvalues_consistent)
+                    # sample predictions and targets
+                    for j in 1:nsamples
+                        rand!(dist, predictions[j])
+                        targets_consistent[j] = rand(Categorical(predictions[j]))
+                    end
+
+                    # define test
+                    test_consistent = DistributionFreeSKCETest(
+                        skce, predictions, targets_consistent
+                    )
+
+                    # estimate pvalue
+                    pvalues_consistent[i] = pvalue(test_consistent)
                 end
 
-                # define test
-                test_consistent = DistributionFreeSKCETest(
-                    skce, predictions, targets_consistent
-                )
-
-                # estimate pvalue
-                pvalues_consistent[i] = pvalue(test_consistent)
+                # compute empirical test errors
+                errors = ecdf(pvalues_consistent).(αs)
+                @test all(((α, p),) -> p < α, zip(αs, errors))
             end
-
-            # compute empirical test errors
-            errors = ecdf(pvalues_consistent).(αs)
-            @test all(((α, p),) -> p < α, zip(αs, errors))
         end
     end
 end
