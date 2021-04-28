@@ -56,14 +56,14 @@
                 test = @test_deprecated AsymptoticSKCETest(arg, data...)
                 @test test isa AsymptoticSKCETest
                 @test test.kernel === kernel
-                @test test.estimate == skce(predictions, targets)
+                @test test.estimate ≈ skce(predictions, targets)
             end
         end
 
         test = @test_deprecated AsymptoticSKCETest(skce, predictions, targets)
         @test test isa AsymptoticSKCETest
         @test test.kernel === kernel
-        @test test.estimate === skce(predictions, targets)
+        @test test.estimate ≈ skce(predictions, targets)
     end
 
     @testset "AsymptoticBlockSKCETest" begin
@@ -76,7 +76,7 @@
                 @test test.kernel === kernel
                 @test test.blocksize == blocksize
                 @test test.nblocks == length(predictions) ÷ blocksize
-                @test test.estimate == skce(predictions, targets)
+                @test test.estimate ≈ skce(predictions, targets)
             end
         end
 
@@ -85,7 +85,7 @@
         @test test.kernel === kernel
         @test test.blocksize == blocksize
         @test test.nblocks == length(predictions) ÷ blocksize
-        @test test.estimate == skce(predictions, targets)
+        @test test.estimate ≈ skce(predictions, targets)
     end
 
     @testset "AsymptoticCMETest" begin
