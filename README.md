@@ -9,6 +9,8 @@ Hypothesis tests of calibration.
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 [![Bors enabled](https://bors.tech/images/badge_small.svg)](https://app.bors.tech/repositories/24613)
 
+[There is also a Python interface for this package](https://github.com/devmotion/pycalibration)
+
 ## Overview
 
 This package implements different hypothesis tests for calibration of
@@ -24,6 +26,8 @@ and
 CalibrationErrors.jl contains estimators for classification models.
 CalibrationErrorsDistributions.jl extends them to more general probabilistic predictive
 models that output arbitrary probability distributions.
+
+[pycalibration](https://github.com/devmotion/pycalibration) is a Python interface for CalibrationErrors.jl, CalibrationErrorsDistributions.jl, and CalibrationTests.jl.
 
 ## References
 
