@@ -90,7 +90,7 @@ function HypothesisTests.pvalue(test::AsymptoticSKCETest; kwargs...)
     return pvalue(Random.GLOBAL_RNG, test; kwargs...)
 end
 function HypothesisTests.pvalue(
-    rng::AbstractRNG, test::AsymptoticSKCETest; bootstrap_iters::Int=1_000
+    rng::Random.AbstractRNG, test::AsymptoticSKCETest; bootstrap_iters::Int=1_000
 )
     return bootstrap_ccdf(rng, test.statistic, test.kernelmatrix, bootstrap_iters)
 end
@@ -245,7 +245,9 @@ Then we obtain
 T' = \frac{1}{n^2} \sum_{i=1}^n C_i \sum_{j=1}^n \bigg(\frac{n}{n-1} (C_j - \delta_{i,j}) - 2\bigg) h_k\big((P_{X_i}, Y_i), (P_{X_j}, Y_j)\big).
 ```
 """
-function bootstrap_ccdf(rng::AbstractRNG, statistic, kernelmatrix, bootstrap_iters::Int)
+function bootstrap_ccdf(
+    rng::Random.AbstractRNG, statistic, kernelmatrix, bootstrap_iters::Int
+)
     # initialize array of counts of resampled indices
     nsamples = LinearAlgebra.checksquare(kernelmatrix)
     resampling_counts = Vector{Int}(undef, nsamples)
@@ -270,7 +272,7 @@ function bootstrap_ccdf(rng::AbstractRNG, statistic, kernelmatrix, bootstrap_ite
             ci = resampling_counts[i]
             iszero(ci) && continue
 
-            zi = mean(enumerate(resampling_counts)) do (j, cj)
+            zi = Statistics.mean(enumerate(resampling_counts)) do (j, cj)
                 # obtain evaluation of the kernel function
                 @inbounds hij = kernelmatrix[j, i]
                 return ((cj - (i == j)) * α - 2) * hij

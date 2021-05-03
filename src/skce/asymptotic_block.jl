@@ -62,18 +62,18 @@ HypothesisTests.default_tail(::AsymptoticBlockSKCETest) = :right
 
 function HypothesisTests.pvalue(test::AsymptoticBlockSKCETest; tail=:right)
     if tail === :right
-        normccdf(test.z)
+        StatsFuns.normccdf(test.z)
     else
         throw(ArgumentError("tail=$(tail) is invalid"))
     end
 end
 
 # confidence interval by inversion
-function StatsBase.confint(test::AsymptoticBlockSKCETest; level=0.95, tail=:right)
+function HypothesisTests.confint(test::AsymptoticBlockSKCETest; level=0.95, tail=:right)
     HypothesisTests.check_level(level)
 
     if tail === :right
-        q = norminvcdf(level)
+        q = StatsFuns.norminvcdf(level)
         lowerbound = test.estimate - q * test.stderr
         (max(zero(lowerbound), lowerbound), oftype(lowerbound, Inf))
     else
