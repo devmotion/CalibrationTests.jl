@@ -245,7 +245,9 @@ Then we obtain
 T' = \frac{1}{n^2} \sum_{i=1}^n C_i \sum_{j=1}^n \bigg(\frac{n}{n-1} (C_j - \delta_{i,j}) - 2\bigg) h_k\big((P_{X_i}, Y_i), (P_{X_j}, Y_j)\big).
 ```
 """
-function bootstrap_ccdf(rng::Random.AbstractRNG, statistic, kernelmatrix, bootstrap_iters::Int)
+function bootstrap_ccdf(
+    rng::Random.AbstractRNG, statistic, kernelmatrix, bootstrap_iters::Int
+)
     # initialize array of counts of resampled indices
     nsamples = LinearAlgebra.checksquare(kernelmatrix)
     resampling_counts = Vector{Int}(undef, nsamples)
