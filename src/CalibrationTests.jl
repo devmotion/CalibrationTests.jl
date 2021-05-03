@@ -3,15 +3,14 @@ module CalibrationTests
 using Reexport
 
 @reexport using CalibrationErrors
-using HypothesisTests
+using ConsistencyResampling: ConsistencyResampling
+using HypothesisTests: HypothesisTests
 @reexport using KernelFunctions
-using UnPack
-using StatsBase
-using StatsFuns
-
-using LinearAlgebra
-using Random
-using Statistics
+using LinearAlgebra: LinearAlgebra
+using Random: Random
+using Statistics: Statistics
+using StatsFuns: StatsFuns
+using StructArrays: StructArrays
 
 using CalibrationErrors: CalibrationErrorEstimator, SKCE, unsafe_skce_eval
 
@@ -20,6 +19,7 @@ export DistributionFreeSKCETest, AsymptoticBlockSKCETest, AsymptoticSKCETest
 export AsymptoticCMETest
 
 # re-export
+using HypothesisTests: pvalue, confint
 export pvalue, confint
 
 include("consistency.jl")

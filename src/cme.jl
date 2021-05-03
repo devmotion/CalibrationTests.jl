@@ -16,30 +16,30 @@ end
 function AsymptoticCMETest(
     estimator::UCME, predictions::AbstractVector, targets::AbstractVector
 )
-    @unpack kernel, testpredictions, testtargets = estimator
-
     # determine number of observations and test locations
     nsamples = length(predictions)
+    testpredictions = estimator.testpredictions
     ntestsamples = length(testpredictions)
 
     # create matrix of deviations (observations × test locations)
+    kernel = estimator.kernel
     deviations =
         CalibrationErrors.unsafe_ucme_eval.(
             (kernel,),
             predictions,
             targets,
             permutedims(testpredictions),
-            permutedims(testtargets),
+            permutedims(estimator.testtargets),
         )
 
     # compute UCME estimate
-    mean_deviations = mean(deviations; dims=1)
+    mean_deviations = Statistics.mean(deviations; dims=1)
     estimate = sum(abs2, mean_deviations) / ntestsamples
 
     # compute test statistic
-    C = Symmetric(Statistics.covm(deviations, mean_deviations))
+    C = LinearAlgebra.Symmetric(Statistics.covm(deviations, mean_deviations))
     x = vec(mean_deviations)
-    statistic = nsamples * dot(x, C \ x)
+    statistic = nsamples * LinearAlgebra.dot(x, C \ x)
 
     return AsymptoticCMETest(kernel, nsamples, ntestsamples, estimate, x, statistic)
 end
@@ -53,7 +53,7 @@ HypothesisTests.default_tail(::AsymptoticCMETest) = :right
 
 function HypothesisTests.pvalue(test::AsymptoticCMETest; tail=:right)
     if tail === :right
-        chisqccdf(test.ntestsamples, test.statistic)
+        StatsFuns.chisqccdf(test.ntestsamples, test.statistic)
     else
         throw(ArgumentError("tail=$(tail) is invalid"))
     end

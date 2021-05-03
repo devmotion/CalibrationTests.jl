@@ -24,22 +24,15 @@ end
 HypothesisTests.default_tail(::DistributionFreeSKCETest) = :right
 
 function HypothesisTests.pvalue(test::DistributionFreeSKCETest{<:BiasedSKCE})
-    @unpack bound, n, estimate = test
-
-    s = sqrt(n * estimate / bound) - 1
-
-    # if estimate is below threshold B₂
-    s < zero(s) && (s = zero(s))
-
-    return exp(-s^2 / 2)
+    s = sqrt(test.n * test.estimate / test.bound) - 1
+    p = exp(-max(s, zero(s))^2 / 2)
+    return p
 end
 
 function HypothesisTests.pvalue(
     test::DistributionFreeSKCETest{<:Union{UnbiasedSKCE,BlockUnbiasedSKCE}}
 )
-    @unpack bound, n, estimate = test
-
-    return exp(-div(n, 2) * estimate^2 / (2 * bound^2))
+    return exp(-div(test.n, 2) * (test.estimate / test.bound)^2 / 2)
 end
 
 HypothesisTests.testname(::DistributionFreeSKCETest) = "Distribution-free SKCE test"
