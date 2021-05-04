@@ -9,7 +9,7 @@ Hypothesis tests of calibration.
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 [![Bors enabled](https://bors.tech/images/badge_small.svg)](https://app.bors.tech/repositories/24613)
 
-[There is also a Python interface for this package](https://github.com/devmotion/pycalibration)
+**There are also [Python](https://github.com/devmotion/pycalibration) and [R](https://github.com/devmotion/rcalibration) interfaces for this package**
 
 ## Overview
 
@@ -28,6 +28,8 @@ CalibrationErrorsDistributions.jl extends them to more general probabilistic pre
 models that output arbitrary probability distributions.
 
 [pycalibration](https://github.com/devmotion/pycalibration) is a Python interface for CalibrationErrors.jl, CalibrationErrorsDistributions.jl, and CalibrationTests.jl.
+
+[rcalibration](https://github.com/devmotion/rcalibration) is an R interface for CalibrationErrors.jl, CalibrationErrorsDistributions.jl, and CalibrationTests.jl.
 
 ## References
 
