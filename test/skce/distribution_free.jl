@@ -3,12 +3,11 @@
         # default bounds for base kernels
         CalibrationTests.uniformbound(ExponentialKernel()) == 1
         CalibrationTests.uniformbound(SqExponentialKernel()) == 1
-        CalibrationTests.uniformbound(TVExponentialKernel()) == 1
         CalibrationTests.uniformbound(WhiteKernel()) == 1
 
         # default bounds for kernels with input transformations
         CalibrationTests.uniformbound(SqExponentialKernel() ∘ ScaleTransform(rand())) == 1
-        CalibrationTests.uniformbound(TVExponentialKernel() ∘ ScaleTransform(rand(10))) == 1
+        CalibrationTests.uniformbound(ExponentialKernel() ∘ ScaleTransform(rand(10))) == 1
 
         # default bounds for scaled kernels
         CalibrationTests.uniformbound(42 * ExponentialKernel()) == 42
