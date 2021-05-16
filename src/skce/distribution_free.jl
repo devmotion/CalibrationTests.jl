@@ -53,7 +53,6 @@ uniformbound(kce::SKCE) = 2 * uniformbound(kce.kernel)
 # uniform bounds of the norm of base kernels
 uniformbound(kernel::ExponentialKernel) = 1
 uniformbound(kernel::SqExponentialKernel) = 1
-uniformbound(kernel::TVExponentialKernel) = 1
 uniformbound(kernel::WhiteKernel) = 1
 
 # uniform bound of the norm of a scaled kernel
