@@ -55,9 +55,10 @@
 
         for nclasses in (2, 10)
             # create estimator (sample test locations uniformly)
+            rng = StableRNG(7434)
             dist = Dirichlet(nclasses, 1)
-            testpredictions = [rand(dist) for _ in 1:5]
-            testtargets = rand(1:nclasses, 5)
+            testpredictions = [rand(rng, dist) for _ in 1:5]
+            testtargets = rand(rng, 1:nclasses, 5)
             estimator = UCME(kernel, testpredictions, testtargets)
 
             predictions = [Vector{Float64}(undef, nclasses) for _ in 1:nsamples]
@@ -67,8 +68,8 @@
             for i in eachindex(pvalues_consistent)
                 # sample predictions and targets
                 for j in 1:nsamples
-                    rand!(dist, predictions[j])
-                    targets_consistent[j] = rand(Categorical(predictions[j]))
+                    rand!(rng, dist, predictions[j])
+                    targets_consistent[j] = rand(rng, Categorical(predictions[j]))
                 end
 
                 # define test

@@ -46,6 +46,7 @@
         pvalues_onlyone = similar(pvalues_consistent)
 
         for nclasses in (2, 10)
+            rng = StableRNG(1523)
             dist = Dirichlet(nclasses, 1)
             predictions = [Vector{Float64}(undef, nclasses) for _ in 1:nsamples]
             targets_consistent = Vector{Int}(undef, nsamples)
@@ -54,8 +55,8 @@
             for i in eachindex(pvalues_consistent)
                 # sample predictions and targets
                 for j in 1:nsamples
-                    rand!(dist, predictions[j])
-                    targets_consistent[j] = rand(Categorical(predictions[j]))
+                    rand!(rng, dist, predictions[j])
+                    targets_consistent[j] = rand(rng, Categorical(predictions[j]))
                 end
 
                 # define test
@@ -65,14 +66,14 @@
                 test_onlyone = AsymptoticSKCETest(kernel, predictions, targets_onlyone)
 
                 # estimate pvalues
-                pvalues_consistent[i] = pvalue(test_consistent; bootstrap_iters=200)
-                pvalues_onlyone[i] = pvalue(test_onlyone; bootstrap_iters=200)
+                pvalues_consistent[i] = pvalue(test_consistent; bootstrap_iters=500)
+                pvalues_onlyone[i] = pvalue(test_onlyone; bootstrap_iters=500)
             end
 
             # compute empirical test errors
             ecdf_consistent = ecdf(pvalues_consistent)
-            @test all(ecdf_consistent(α) ≤ α + 0.1 for α in αs)
-            @test all(p < 0.05 for p in pvalues_onlyone)
+            @test maximum(ecdf_consistent.(αs) .- αs) < 0.15
+            @test maximum(pvalues_onlyone) < 0.01
         end
     end
 end
