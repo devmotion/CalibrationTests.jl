@@ -21,10 +21,10 @@
 
                 @test estimate ≈ unbiasedskce(predictions, targets)
                 @test statistic ≈
-                      nsamples / (nsamples - 1) * unbiasedskce(predictions, targets) -
+                    nsamples / (nsamples - 1) * unbiasedskce(predictions, targets) -
                       biasedskce(predictions, targets)
                 @test kernelmatrix ≈
-                      CalibrationErrors.unsafe_skce_eval.(
+                    CalibrationErrors.unsafe_skce_eval.(
                     (kernel,),
                     predictions,
                     targets,

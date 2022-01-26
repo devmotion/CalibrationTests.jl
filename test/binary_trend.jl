@@ -51,7 +51,8 @@
             println(test_consistent)
 
             test_only_two = @inferred(DistributionFreeSKCETest(estimator, data_only_two...))
-            @test @inferred(pvalue(test_only_two)) < (estimator isa Union{UnbiasedSKCE,BlockUnbiasedSKCE} ? 0.4 : 1e-6)
+            @test @inferred(pvalue(test_only_two)) <
+                (estimator isa Union{UnbiasedSKCE,BlockUnbiasedSKCE} ? 0.4 : 1e-6)
             println(test_only_two)
         end
     end

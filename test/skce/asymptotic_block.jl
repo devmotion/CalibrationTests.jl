@@ -26,16 +26,16 @@
                     @test test.z == test.estimate / test.stderr
 
                     @test pvalue(test) ==
-                          pvalue(test; tail=:right) ==
-                          ccdf(Normal(), test.z)
+                        pvalue(test; tail=:right) ==
+                        ccdf(Normal(), test.z)
                     @test_throws ArgumentError pvalue(test; tail=:left)
                     @test_throws ArgumentError pvalue(test; tail=:both)
 
                     for α in 0.55:0.05:0.95
                         q = quantile(Normal(), α)
                         @test confint(test; level=α) ==
-                              confint(test; level=α, tail=:right) ==
-                              (max(0, test.estimate - q * test.stderr), Inf)
+                            confint(test; level=α, tail=:right) ==
+                            (max(0, test.estimate - q * test.stderr), Inf)
                         @test_throws ArgumentError confint(test; level=α, tail=:left)
                         @test_throws ArgumentError confint(test; level=α, tail=:both)
                     end
