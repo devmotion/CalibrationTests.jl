@@ -40,8 +40,9 @@
         N = 1_000
 
         for blocksize in (2, 5)
-            ce = BlockUnbiasedSKCE(
-                (ExponentialKernel() ∘ ScaleTransform(0.1)) ⊗ WhiteKernel(), blocksize
+            ce = SKCE(
+                (ExponentialKernel() ∘ ScaleTransform(0.1)) ⊗ WhiteKernel();
+                blocksize=blocksize,
             )
 
             for nclasses in (2, 5, 10)

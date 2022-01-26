@@ -14,7 +14,7 @@
                 ]
                 targets_onlyone = ones(Int, length(predictions))
 
-                skce = BlockUnbiasedSKCE(kernel, blocksize)
+                skce = SKCE(kernel; blocksize=blocksize)
 
                 # for both sets of targets
                 for targets in (targets_consistent, targets_onlyone)

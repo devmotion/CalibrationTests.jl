@@ -17,13 +17,13 @@
         CalibrationTests.uniformbound(kernel) == 3.2 * 2.7
 
         # default bounds for kernel terms
-        CalibrationTests.uniformbound(BlockUnbiasedSKCE(kernel)) == 2 * 3.2 * 2.7
+        CalibrationTests.uniformbound(SKCE(kernel; blocksize=2)) == 2 * 3.2 * 2.7
     end
 
     @testset "estimator and estimates" begin
         kernel = (ExponentialKernel() ∘ ScaleTransform(0.1)) ⊗ WhiteKernel()
 
-        for skce in (BiasedSKCE(kernel), UnbiasedSKCE(kernel), BlockUnbiasedSKCE(kernel))
+        for skce in (SKCE(kernel), SKCE(kernel; unbiased=false), SKCE(kernel; blocksize=2))
             for nclasses in (2, 10, 100), nsamples in (10, 50, 100)
                 # sample predictions and targets
                 dist = Dirichlet(nclasses, 1)
@@ -53,7 +53,7 @@
 
         pvalues_consistent = Vector{Float64}(undef, 100)
 
-        for skce in (BiasedSKCE(kernel), UnbiasedSKCE(kernel), BlockUnbiasedSKCE(kernel))
+        for skce in (SKCE(kernel), SKCE(kernel; unbiased=false), SKCE(kernel; blocksize=2))
             for nclasses in (2, 10)
                 rng = StableRNG(5921)
                 dist = Dirichlet(nclasses, 1)

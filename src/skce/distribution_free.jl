@@ -23,16 +23,16 @@ end
 
 HypothesisTests.default_tail(::DistributionFreeSKCETest) = :right
 
-function HypothesisTests.pvalue(test::DistributionFreeSKCETest{<:BiasedSKCE})
-    s = sqrt(test.n * test.estimate / test.bound) - 1
-    p = exp(-max(s, zero(s))^2 / 2)
-    return p
-end
-
-function HypothesisTests.pvalue(
-    test::DistributionFreeSKCETest{<:Union{UnbiasedSKCE,BlockUnbiasedSKCE}}
-)
-    return exp(-div(test.n, 2) * (test.estimate / test.bound)^2 / 2)
+function HypothesisTests.pvalue(test::DistributionFreeSKCETest)
+    estimator = test.estimator
+    if estimator.unbiased && (estimator.blocksize === identity || estimator.blocksize isa Integer)
+        return exp(-div(test.n, 2) * (test.estimate / test.bound)^2 / 2)
+    elseif !estimator.unbiased && estimator.blocksize === identity
+        s = sqrt(test.n * test.estimate / test.bound) - 1
+        return exp(-max(s, zero(s))^2 / 2)
+    else
+        error("estimator is not supported")
+    end
 end
 
 HypothesisTests.testname(::DistributionFreeSKCETest) = "Distribution-free SKCE test"

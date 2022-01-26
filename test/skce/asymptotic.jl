@@ -1,8 +1,8 @@
 @testset "asymptotic.jl" begin
     @testset "estimate, statistic, and kernel matrix" begin
         kernel = (ExponentialKernel() ∘ ScaleTransform(0.1)) ⊗ WhiteKernel()
-        biasedskce = BiasedSKCE(kernel)
-        unbiasedskce = UnbiasedSKCE(kernel)
+        unbiasedskce = SKCE(kernel)
+        biasedskce = SKCE(kernel; unbiased=false)
 
         for nclasses in (2, 10, 100), nsamples in (10, 50, 100)
             # sample predictions and targets
