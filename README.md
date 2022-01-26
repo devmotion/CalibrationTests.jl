@@ -19,17 +19,11 @@ probabilistic models in the Julia language.
 ## Related packages
 
 The statistical tests in this package are based on the calibration error estimators
-in the packages [CalibrationErrors.jl](https://github.com/devmotion/CalibrationErrors.jl)
-and
-[CalibrationErrorsDistributions.jl](https://github.com/devmotion/CalibrationErrorsDistributions.jl).
+in the package [CalibrationErrors.jl](https://github.com/devmotion/CalibrationErrors.jl).
 
-CalibrationErrors.jl contains estimators for classification models.
-CalibrationErrorsDistributions.jl extends them to more general probabilistic predictive
-models that output arbitrary probability distributions.
+[pycalibration](https://github.com/devmotion/pycalibration) is a Python interface for CalibrationErrors.jl and CalibrationTests.jl.
 
-[pycalibration](https://github.com/devmotion/pycalibration) is a Python interface for CalibrationErrors.jl, CalibrationErrorsDistributions.jl, and CalibrationTests.jl.
-
-[rcalibration](https://github.com/devmotion/rcalibration) is an R interface for CalibrationErrors.jl, CalibrationErrorsDistributions.jl, and CalibrationTests.jl.
+[rcalibration](https://github.com/devmotion/rcalibration) is an R interface for CalibrationErrors.jl and CalibrationTests.jl.
 
 ## References
 
