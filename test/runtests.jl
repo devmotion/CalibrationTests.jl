@@ -1,6 +1,7 @@
 using CalibrationTests
 using CalibrationErrors
 using Distributions
+using StableRNGs
 using StatsBase
 
 using Random

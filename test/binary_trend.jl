@@ -1,17 +1,17 @@
 @testset "binary_trend" begin
     # sample data
-    function generate_binary_data(nsamples)
+    function generate_binary_data(rng::Random.AbstractRNG, nsamples::Int)
         # generate predictions
         dist = Dirichlet(2, 1)
-        predictions = [rand(dist) for _ in 1:nsamples]
+        predictions = [rand(rng, dist) for _ in 1:nsamples]
 
         # generate targets
-        targets_consistent = [rand() < predictions[i][1] ? 1 : 2 for i in 1:nsamples]
+        targets_consistent = [rand(rng) < predictions[i][1] ? 1 : 2 for i in 1:nsamples]
         targets_onlytwo = fill(2, nsamples)
 
         return (predictions, targets_consistent), (predictions, targets_onlytwo)
     end
-    data_consistent, data_only_two = generate_binary_data(500)
+    data_consistent, data_only_two = generate_binary_data(StableRNG(18732), 500)
 
     # define tensor product kernel (using the mean total variation distance as bandwidth)
     kernel = (ExponentialKernel() ∘ ScaleTransform(3)) ⊗ WhiteKernel()
@@ -26,7 +26,7 @@
 
         for estimator in estimators
             test_consistent = @inferred(ConsistencyTest(estimator, data_consistent...))
-            @test @inferred(pvalue(test_consistent)) > 0.6
+            @test @inferred(pvalue(test_consistent)) > 0.1
             print(test_consistent)
 
             test_only_two = @inferred(ConsistencyTest(estimator, data_only_two...))
@@ -51,11 +51,8 @@
             println(test_consistent)
 
             test_only_two = @inferred(DistributionFreeSKCETest(estimator, data_only_two...))
-            if estimator isa Union{UnbiasedSKCE,BlockUnbiasedSKCE}
-                @test @inferred(pvalue(test_only_two)) < 0.4
-            else
-                @test @inferred(pvalue(test_only_two)) < 1e-6
-            end
+            @test @inferred(pvalue(test_only_two)) <
+                (estimator isa Union{UnbiasedSKCE,BlockUnbiasedSKCE} ? 0.4 : 1e-6)
             println(test_only_two)
         end
     end
@@ -65,7 +62,7 @@
             test_consistent = @inferred(
                 AsymptoticBlockSKCETest(kernel, blocksize, data_consistent...)
             )
-            @test @inferred(pvalue(test_consistent)) > 0.7
+            @test @inferred(pvalue(test_consistent)) > 0.2
             println(test_consistent)
 
             test_only_two = @inferred(
@@ -78,7 +75,7 @@
 
     @testset "Asymptotic SKCE test" begin
         test_consistent = @inferred(AsymptoticSKCETest(kernel, data_consistent...))
-        @test @inferred(pvalue(test_consistent)) > 0.7
+        @test @inferred(pvalue(test_consistent)) > 0.3
         println(test_consistent)
 
         test_only_two = @inferred(AsymptoticSKCETest(kernel, data_only_two...))
@@ -88,12 +85,13 @@
 
     @testset "Asymptotic CME test" begin
         # define estimator (uniformly distributed test locations)
-        testpredictions = [rand(Dirichlet(2, 1)) for _ in 1:5]
-        testtargets = rand(1:2, 5)
+        rng = StableRNG(6789)
+        testpredictions = [rand(rng, Dirichlet(2, 1)) for _ in 1:10]
+        testtargets = rand(rng, 1:2, 10)
         estimator = @inferred(UCME(kernel, testpredictions, testtargets))
 
         test_consistent = @inferred(AsymptoticCMETest(estimator, data_consistent...))
-        @test @inferred(pvalue(test_consistent)) > 0.8
+        @test @inferred(pvalue(test_consistent)) > 0.1
         println(test_consistent)
 
         test_only_two = @inferred(AsymptoticCMETest(estimator, data_only_two...))

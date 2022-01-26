@@ -55,6 +55,7 @@
 
         for skce in (BiasedSKCE(kernel), UnbiasedSKCE(kernel), BlockUnbiasedSKCE(kernel))
             for nclasses in (2, 10)
+                rng = StableRNG(5921)
                 dist = Dirichlet(nclasses, 1)
                 predictions = [Vector{Float64}(undef, nclasses) for _ in 1:nsamples]
                 targets_consistent = Vector{Int}(undef, nsamples)
@@ -62,8 +63,8 @@
                 for i in eachindex(pvalues_consistent)
                     # sample predictions and targets
                     for j in 1:nsamples
-                        rand!(dist, predictions[j])
-                        targets_consistent[j] = rand(Categorical(predictions[j]))
+                        rand!(rng, dist, predictions[j])
+                        targets_consistent[j] = rand(rng, Categorical(predictions[j]))
                     end
 
                     # define test
@@ -76,8 +77,7 @@
                 end
 
                 # compute empirical test errors
-                errors = ecdf(pvalues_consistent).(αs)
-                @test all(((α, p),) -> p < α, zip(αs, errors))
+                @test all(ecdf(pvalues_consistent).(αs) .< αs)
             end
         end
     end
