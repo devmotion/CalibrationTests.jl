@@ -27,7 +27,7 @@ function AsymptoticBlockSKCETest(
     # evaluate U-statistic of the first block
     istart = 1
     iend = blocksize
-    x = UnbiasedSKCE(kernel)(view(predictions, istart:iend), view(targets, istart:iend))
+    x = SKCE(kernel)(view(predictions, istart:iend), view(targets, istart:iend))
 
     # initialize the estimate and the sum of squares
     estimate = x / 1
@@ -38,7 +38,7 @@ function AsymptoticBlockSKCETest(
         # evaluate U-statistic
         istart += blocksize
         iend += blocksize
-        x = UnbiasedSKCE(kernel)(view(predictions, istart:iend), view(targets, istart:iend))
+        x = SKCE(kernel)(view(predictions, istart:iend), view(targets, istart:iend))
 
         # update the estimate
         Δestimate = x - estimate

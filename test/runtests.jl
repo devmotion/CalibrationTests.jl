@@ -34,8 +34,4 @@ Random.seed!(1234)
     @testset "Asymptotic CME" begin
         include("cme.jl")
     end
-
-    @testset "Deprecations" begin
-        include("deprecated.jl")
-    end
 end

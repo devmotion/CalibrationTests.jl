@@ -19,9 +19,9 @@
     @testset "Consistency test" begin
         # define estimators
         estimators = (
-            BiasedSKCE(kernel),
-            UnbiasedSKCE(kernel),
-            (BlockUnbiasedSKCE(kernel, b) for b in (2, 10, 50, 100))...,
+            SKCE(kernel),
+            SKCE(kernel; unbiased=false),
+            (SKCE(kernel; blocksize=b) for b in (2, 10, 50, 100))...,
         )
 
         for estimator in estimators
@@ -38,9 +38,9 @@
     @testset "Distribution-free tests" begin
         # define estimators
         estimators = (
-            BiasedSKCE(kernel),
-            UnbiasedSKCE(kernel),
-            (BlockUnbiasedSKCE(kernel, b) for b in (2, 10, 50, 100))...,
+            SKCE(kernel),
+            SKCE(kernel; unbiased=false),
+            (SKCE(kernel; blocksize=b) for b in (2, 10, 50, 100))...,
         )
 
         for estimator in estimators
@@ -51,8 +51,7 @@
             println(test_consistent)
 
             test_only_two = @inferred(DistributionFreeSKCETest(estimator, data_only_two...))
-            @test @inferred(pvalue(test_only_two)) <
-                (estimator isa Union{UnbiasedSKCE,BlockUnbiasedSKCE} ? 0.4 : 1e-6)
+            @test @inferred(pvalue(test_only_two)) < (estimator.unbiased ? 0.4 : 1e-6)
             println(test_only_two)
         end
     end
