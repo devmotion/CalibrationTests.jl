@@ -25,7 +25,8 @@ HypothesisTests.default_tail(::DistributionFreeSKCETest) = :right
 
 function HypothesisTests.pvalue(test::DistributionFreeSKCETest)
     estimator = test.estimator
-    if estimator.unbiased && (estimator.blocksize === identity || estimator.blocksize isa Integer)
+    if estimator.unbiased &&
+        (estimator.blocksize === identity || estimator.blocksize isa Integer)
         return exp(-div(test.n, 2) * (test.estimate / test.bound)^2 / 2)
     elseif !estimator.unbiased && estimator.blocksize === identity
         s = sqrt(test.n * test.estimate / test.bound) - 1
