@@ -16,7 +16,7 @@ StatsFuns = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
 
 [compat]
-CalibrationErrors = "0.5.15"
+CalibrationErrors = "0.5.15, 0.6"
 ConsistencyResampling = "0.3"
 HypothesisTests = "0.8, 0.9, 0.10"
 KernelFunctions = "0.10"
