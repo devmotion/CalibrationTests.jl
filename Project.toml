@@ -1,7 +1,7 @@
 name = "CalibrationTests"
 uuid = "2818745e-0823-50c7-bc2d-405ac343d48b"
 authors = ["David Widmann <david.widmann@it.uu.se>"]
-version = "0.6.0"
+version = "0.6.1"
 
 [deps]
 CalibrationErrors = "33913031-fe46-5864-950f-100836f47845"
