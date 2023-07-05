@@ -1,7 +1,7 @@
 name = "CalibrationTests"
 uuid = "2818745e-0823-50c7-bc2d-405ac343d48b"
 authors = ["David Widmann <david.widmann@it.uu.se>"]
-version = "0.6.2"
+version = "0.6.3"
 
 [deps]
 CalibrationErrors = "33913031-fe46-5864-950f-100836f47845"
@@ -18,7 +18,7 @@ StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
 [compat]
 CalibrationErrors = "0.6"
 ConsistencyResampling = "0.3"
-HypothesisTests = "0.8, 0.9, 0.10"
+HypothesisTests = "0.8, 0.9, 0.10, 0.11"
 KernelFunctions = "0.10"
 Reexport = "1"
 StatsFuns = "0.8, 0.9, 1"
