@@ -15,7 +15,6 @@ Random.seed!(1234)
     @testset "General" begin
         include("aqua.jl")
     end
-    
     @testset "Binary trend" begin
         include("binary_trend.jl")
     end
