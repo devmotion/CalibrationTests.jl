@@ -7,7 +7,7 @@ Hypothesis tests of calibration.
 [![Codecov](https://codecov.io/gh/devmotion/CalibrationTests.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/devmotion/CalibrationTests.jl)
 [![Coveralls](https://coveralls.io/repos/github/devmotion/CalibrationTests.jl/badge.svg?branch=main)](https://coveralls.io/github/devmotion/CalibrationTests.jl?branch=main)
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
-[![Bors enabled](https://bors.tech/images/badge_small.svg)](https://app.bors.tech/repositories/24613)
+[![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 **There are also [Python](https://github.com/devmotion/pycalibration) and [R](https://github.com/devmotion/rcalibration) interfaces for this package**
 
