@@ -1,4 +1,5 @@
 using CalibrationTests
+using Aqua
 using CalibrationErrors
 using Distributions
 using StableRNGs
@@ -11,6 +12,9 @@ using Test
 Random.seed!(1234)
 
 @testset "CalibrationTests" begin
+    @testset "General" begin
+        include("aqua.jl")
+    end
     @testset "Binary trend" begin
         include("binary_trend.jl")
     end
@@ -20,15 +24,9 @@ Random.seed!(1234)
     end
 
     @testset "SKCE" begin
-        @testset "Asymptotic" begin
-            include("skce/asymptotic.jl")
-        end
-        @testset "Asymptotic block" begin
-            include("skce/asymptotic_block.jl")
-        end
-        @testset "Distribution-free" begin
-            include("skce/distribution_free.jl")
-        end
+        include("skce/asymptotic.jl")
+        include("skce/asymptotic_block.jl")
+        include("skce/distribution_free.jl")
     end
 
     @testset "Asymptotic CME" begin
