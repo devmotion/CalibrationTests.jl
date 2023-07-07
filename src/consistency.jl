@@ -9,6 +9,25 @@ struct ConsistencyTest{E<:CalibrationErrorEstimator,P,T,V} <: HypothesisTests.Hy
     estimate::V
 end
 
+"""
+    ConsistencyTest(
+        estimator::CalibrationErrorEstimator,
+        predictions::AbstractVector,
+        targets::AbstractVector,
+    )
+
+Construct an hypothesis test of calibration based on consistency resampling with a
+calibration `estimator` as test statistic and `predictions` and `targets` of a model of
+interest.
+
+Consistency resampling is a parametric bootstrap method for calibrated models.
+    
+## References
+
+Bröcker, J., & Smith, L. A. (2007).
+[Increasing the reliability of reliability diagrams](https://doi.org/10.1175/WAF993.1).
+Weather and forecasting, 22(3), 651-661.
+"""
 function ConsistencyTest(
     estimator::CalibrationErrorEstimator,
     predictions::AbstractVector,
