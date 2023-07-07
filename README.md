@@ -2,6 +2,8 @@
 
 Hypothesis tests of calibration.
 
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://devmotion.github.io/CalibrationTests.jl/stable)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://devmotion.github.io/CalibrationTests.jl/dev)
 [![Build Status](https://github.com/devmotion/CalibrationTests.jl/workflows/CI/badge.svg?branch=main)](https://github.com/devmotion/CalibrationTests.jl/actions?query=workflow%3ACI+branch%3Amain)
 [![DOI](https://zenodo.org/badge/215970266.svg)](https://zenodo.org/badge/latestdoi/215970266)
 [![Codecov](https://codecov.io/gh/devmotion/CalibrationTests.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/devmotion/CalibrationTests.jl)
