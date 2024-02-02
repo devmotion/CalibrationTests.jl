@@ -17,7 +17,6 @@ makedocs(;
     ),
     pages=["Home" => "index.md", "api.md"],
     checkdocs=:exports,
-    strict=true,
 )
 
 deploydocs(;
